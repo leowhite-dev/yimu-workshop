@@ -63,9 +63,13 @@ a:hover {
     left: 20px;
     background-color: transparent;
     color: var(--grey-color);
-    padding: 15px;
+    /* 以下padding能保持标题处于合适的位置，线的长度也位于合适位置(主要是基于pading-right:0实现) */
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 7px;
     z-index: 200;
-    max-width: 250px;
+    width: fit-content;
+    max-width: 150px;
     border-bottom: 1px solid rgba(129, 140, 248, 0.3);
     box-shadow: none;
 }
@@ -83,6 +87,7 @@ a:hover {
     opacity: 0.7;
     color: var(--grey-color);
     font-weight: 300;
+    text-align: right;
 }
 
 /* Tab Navigation */
