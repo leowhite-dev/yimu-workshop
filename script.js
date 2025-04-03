@@ -115,7 +115,35 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check if the 5th field (index 4) contains a "/" character
             if (fields.length > 4 && fields[4].includes('/')) {
-                transferRecords.push(line); // This is a transfer record
+                // Process transfer records according to requirements
+                if (fields.length > 6) {
+                    // Create new array with 6 columns according to the specified requirements
+                    const reformattedFields = [
+                        fields[0],                // Column 1 ← Original Column 1 (Date)
+                        fields.length > 6 ? fields[6] : "", // Column 2 ← Original Column 7 (Transfer out account)
+                        // Column 3 ← Process original Column 2 (Transfer in account)
+                        processTransferInAccount(fields.length > 1 ? fields[1] : ""),
+                        // Column 4 ← Original Column 6 (Amount) with ¥ symbol removed
+                        fields.length > 5 ? fields[5].replace(/¥/g, "") : "",
+                        "",                       // Column 5 - Empty (Fee)
+                        ""                        // Column 6 - Empty (Remarks)
+                    ];
+                    
+                    // Join fields with commas and preserve quotes if needed
+                    const reformattedLine = reformattedFields.map(field => {
+                        // If field contains commas or quotes, wrap it in quotes
+                        if (field.includes(',') || field.includes('"')) {
+                            // Replace any quotes with double quotes for escaping
+                            return '"' + field.replace(/"/g, '""') + '"';
+                        }
+                        return field;
+                    }).join(',');
+                    
+                    transferRecords.push(reformattedLine);
+                } else {
+                    // If the original line is likely a header or incomplete, add a properly formatted header
+                    transferRecords.push("日期,转出账户,转入账户,金额,手续费,备注");
+                }
             } else {
                 // This is a payment record - reformat it according to requirements
                 if (fields.length > 0) {
@@ -152,6 +180,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         return { transferRecords, paymentRecords };
+    }
+    
+    // Function to process transfer in account according to requirements
+    function processTransferInAccount(field) {
+        if (field.includes("到")) {
+            // Extract characters after "到"
+            const afterTo = field.substring(field.indexOf("到") + 1);
+            
+            // Check if it contains "银行"
+            if (afterTo.includes("银行")) {
+                // Add "储蓄卡" after "银行"
+                const bankIndex = afterTo.indexOf("银行");
+                return afterTo.substring(0, bankIndex + 2) + "储蓄卡" + afterTo.substring(bankIndex + 2);
+            }
+            
+            return afterTo;
+        } else if (field.includes("转入") && field.includes("-")) {
+            // Extract characters between "转入" and "-"
+            const startIndex = field.indexOf("转入") + 2;
+            const endIndex = field.indexOf("-", startIndex);
+            
+            if (endIndex > startIndex) {
+                return field.substring(startIndex, endIndex);
+            }
+        }
+        
+        // Return original value if no processing rules match
+        return field;
     }
     
     // Parse CSV line handling quoted fields
@@ -210,7 +266,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add transfer records to the ZIP
             if (transferRecords.length > 0) {
-                zip.file(`${baseFileName}_转账账单.csv`, transferRecords.join('\n'));
+                // Create header row for transfer records with the proper column names
+                const headerRow = "日期,转出账户,转入账户,金额,手续费,备注";
+                
+                // If there's only one transfer record or the first record doesn't look like a header,
+                // just add our custom header. Otherwise, replace the first record (original header)
+                let transferRecordsWithHeader;
+                if (transferRecords.length === 1 || (!transferRecords[0].includes('日期'))) {
+                    transferRecordsWithHeader = [headerRow, ...transferRecords];
+                } else {
+                    transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
+                }
+                
+                zip.file(`${baseFileName}_转账账单.csv`, transferRecordsWithHeader.join('\n'));
             }
             
             // Add payment records to the ZIP
