@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一木记账工坊 - 非官方工具集合</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="site-title">
+                <h1>一木记账工坊</h1>
+                <p>非官方工具集合</p>
+            </div>
+            
+            <nav class="tab-navigation">
+                <button class="tab-button active" data-tab="about">关于</button>
+                <button class="tab-button" data-tab="feature1">功能1</button>
+                <button class="tab-button" data-tab="feature2">功能2</button>
+                <button class="tab-button" data-tab="feature3">功能3</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <!-- About Tab Content -->
+            <div class="tab-content active" id="about">
+                <section class="intro container">
+                    <h2>介绍</h2>
+                    <p><strong>一木记账工坊</strong>是一个由第三方开发者开发的<strong>开源工具集合</strong>，旨在为<a href="https://www.yimuapp.com" target="_blank">一木记账</a>用户提供额外的功能支持。</p>
+                    
+                    <div class="disclaimer">
+                        <h3>⚠ 重要声明</h3>
+                        <p>本项目与杭州一木宇宙科技有限责任公司<strong>无关</strong>，所有工具均由个人开发，未经官方审查。请<strong>不要</strong>向官方团队反馈本项目的 bug 或问题。如有任何反馈，请联系 <a href="mailto:leowhite.devspace@gmail.com">leowhite.devspace@gmail.com</a> 或在 GitHub 提交 issue 和 PR。您的意见和反馈十分重要。</p>
+                    </div>
+                
+                    <div class="background">
+                        <h2>项目背景</h2>
+                        <p>在使用一木记账时，开发者发现某些功能尚未满足自己的使用场景，认为这些功能可以通过自己开发来快速实现临时解决方案。因此，开发了这个工具集合，其名称灵感来源于 Steam 创意工坊，旨在从插件角度为一木记账提供第三方辅助支持。</p>
+                    </div>
+                
+                    <div class="security">
+                        <h2>安全声明</h2>
+                        <p>为保护用户数据安全，本项目的所有工具均基于<strong>不联网</strong>的原则开发，尽量降低数据泄露风险。欢迎通过代码审查、流量监控等方式进行监督，如发现问题请及时反馈。</p>
+                    </div>
+                
+                    <div class="roadmap">
+                        <h2>目前开发计划</h2>
+                        
+                        <div class="platforms">
+                            <h3>支持平台</h3>
+                            <ul>
+                                <li><strong>iOS</strong>：开发者目前仅使用 iOS 设备，代码完全支持 iOS 端一木记账应用。</li>
+                                <li><strong>Android & HarmonyOS</strong>：功能与 iOS 端无差异的部分可兼容。</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="features">
+                            <h3>计划中的功能</h3>
+                            <ul>
+                                <li><strong>批量导入账单格式调整</strong>：帮助用户快速格式化账单数据，方便导入一木记账。</li>
+                                <li><strong>软件导出账单的数据可视化</strong>：提供账单数据的可视化分析功能。</li>
+                                <li><strong>多平台账单识别模型</strong>：开发模型以识别和处理多平台的账单数据。</li>
+                            </ul>
+                            <p class="note"><strong>注意</strong>：以上功能仅为初步计划，不具备强执行约束。</p>
+                        </div>
+                    </div>
+                
+                    <div class="contribution">
+                        <h2>贡献与反馈</h2>
+                        <p>我们欢迎任何形式的贡献，包括但不限于：</p>
+                        <ul>
+                            <li>代码提交</li>
+                            <li>功能建议</li>
+                            <li>bug 报告</li>
+                        </ul>
+                        
+                        <p>你可以通过以下方式参与：</p>
+                        <ul>
+                            <li>在 GitHub 提交 <a href="https://github.com/leowhite-dev/yimu-workshop/issues" target="_blank">Issue</a> 或 <a href="https://github.com/leowhite-dev/yimu-workshop/pulls" target="_blank">Pull Request</a></li>
+                            <li>通过 <a href="mailto:leowhite.devspace@gmail.com">leowhite.devspace@gmail.com</a> 联系开发者</li>
+                        </ul>
+                        
+                        <p>感谢你的支持与参与！</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Feature 1 Tab Content -->
+            <div class="tab-content" id="feature1">
+                <section class="container">
+                    <h2>批量导入账单格式调整</h2>
+                    <p>该功能帮助用户快速格式化账单数据，方便导入一木记账。</p>
+                    <div class="feature-details">
+                        <h3>功能描述</h3>
+                        <p>通过简单的界面操作，用户可以将不同格式的账单数据转换为一木记账支持的格式，大幅提高数据导入效率。</p>
+                        
+                        <h3>使用场景</h3>
+                        <ul>
+                            <li>从银行导出的账单格式调整</li>
+                            <li>从其他记账软件导出数据的转换</li>
+                            <li>批量整理和清洗交易记录</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Feature 2 Tab Content -->
+            <div class="tab-content" id="feature2">
+                <section class="container">
+                    <h2>软件导出账单的数据可视化</h2>
+                    <p>提供账单数据的可视化分析功能，帮助用户更好地理解消费模式。</p>
+                    <div class="feature-details">
+                        <h3>功能描述</h3>
+                        <p>将一木记账导出的数据转换为直观的图表和报表，提供超出原生应用的深度分析功能。</p>
+                        
+                        <h3>可视化类型</h3>
+                        <ul>
+                            <li>消费趋势分析图表</li>
+                            <li>分类支出比例图</li>
+                            <li>月度收支对比</li>
+                            <li>自定义报表导出</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Feature 3 Tab Content -->
+            <div class="tab-content" id="feature3">
+                <section class="container">
+                    <h2>多平台账单识别模型</h2>
+                    <p>开发模型以识别和处理多平台的账单数据，提高记账效率。</p>
+                    <div class="feature-details">
+                        <h3>功能描述</h3>
+                        <p>通过识别模型自动解析不同平台的账单格式，减少手动输入的工作量。</p>
+                        
+                        <h3>支持平台</h3>
+                        <ul>
+                            <li>各大银行电子账单</li>
+                            <li>支付宝账单</li>
+                            <li>微信支付记录</li>
+                            <li>信用卡账单</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 一木记账工坊 - 开源项目</p>
+            <p>
+                <a href="https://github.com/leowhite-dev/yimu-workshop" target="_blank">GitHub</a> | 
+                <a href="mailto:leowhite.devspace@gmail.com">联系我们</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
