@@ -13,7 +13,7 @@
     --border-radius: 8px;
     --sidebar-width: 240px;
     --tab-width: 8px;
-    --tab-expanded-width: 90px;
+    --tab-expanded-width: 120px;
 }
 
 * {
@@ -59,7 +59,7 @@ a:hover {
 /* Site Title */
 .site-title {
     position: fixed;
-    top: 20px;
+    top: 10px;
     left: 20px;
     background-color: transparent;
     color: var(--grey-color);
@@ -90,7 +90,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin-top: 120px;
+    margin-top: 110px;
     padding: 20px 0;
     transition: transform 0.3s ease;
     /* Retract non-active tabs by default */
@@ -117,14 +117,17 @@ a:hover {
     transition: all 0.3s ease;
     position: relative;
     padding: 0 15px;
-    width: 90px; /* Set all tabs to the same width (based on the longest content) */
+    width: 120px; /* Increased width to accommodate text on one line */
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Show ellipsis for overflowing text */
 }
 
 /* The active tab */
 .tab-button.active {
     position: relative;
     z-index: 5;
-    width: 100px; /* Make active tab slightly wider for emphasis */
+    width: 130px; /* Make active tab slightly wider for emphasis */
     /* Make active tab always visible */
     transform: translateX(calc(var(--tab-expanded-width) - var(--tab-width)));
 }
@@ -168,7 +171,7 @@ a:hover {
 .content-area {
     flex: 1;
     margin-left: var(--tab-width);
-    padding-top: 100px;
+    padding-top: 120px;
     padding-bottom: 3rem;
 }
 
@@ -250,12 +253,12 @@ section h3 {
 }
 
 /* Lists */
-ul {
+ul, ol {
     list-style-position: inside;
     margin-bottom: 1.5rem;
 }
 
-ul li {
+ul li, ol li {
     margin-bottom: 0.75rem;
     position: relative;
     padding-left: 1.5rem;
@@ -271,11 +274,24 @@ ul li::before {
     font-size: 1.2rem;
 }
 
-#feature2 ul li::before {
+ol {
+    counter-reset: item;
+}
+
+ol li::before {
+    counter-increment: item;
+    content: counter(item) ".";
+    position: absolute;
+    left: 0;
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+#feature2 ul li::before, #feature2 ol li::before {
     color: var(--orange-color);
 }
 
-#feature3 ul li::before {
+#feature3 ul li::before, #feature3 ol li::before {
     color: var(--pink-color);
 }
 
@@ -409,5 +425,98 @@ footer a:hover {
     .site-title p {
         font-size: 0.7rem;
     }
+}
+
+/* Feature Actions */
+.feature-actions {
+    display: flex;
+    gap: 15px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: var(--box-shadow);
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 20px -3px rgba(0, 0, 0, 0.1), 0 8px 10px -2px rgba(0, 0, 0, 0.05);
+}
+
+.action-button .icon {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+.upload-btn {
+    background-color: var(--secondary-color);
+}
+
+.download-btn {
+    background-color: var(--primary-color);
+}
+
+/* Responsive styles for buttons */
+@media (max-width: 480px) {
+    .feature-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .action-button {
+        width: 100%;
+    }
+}
+
+/* Loading Indicator */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--light-color);
+    border-top: 5px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+.loading-text {
+    color: white;
+    font-size: 1.2rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 

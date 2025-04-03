@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">处理中，请稍候...</div>
+    </div>
+
     <div class="page-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -18,7 +24,7 @@
             
             <nav class="tab-navigation">
                 <button class="tab-button active" data-tab="about">关于</button>
-                <button class="tab-button" data-tab="feature1">功能1</button>
+                <button class="tab-button" data-tab="feature1">导入格式调整</button>
                 <button class="tab-button" data-tab="feature2">功能2</button>
                 <button class="tab-button" data-tab="feature3">功能3</button>
             </nav>
@@ -54,7 +60,7 @@
                             <h3>支持平台</h3>
                             <ul>
                                 <li><strong>iOS</strong>：开发者目前仅使用 iOS 设备，代码完全支持 iOS 端一木记账应用。</li>
-                                <li><strong>Android & HarmonyOS</strong>：功能与 iOS 端无差异的部分可兼容。</li>
+                                <li><strong>Android &amp; HarmonyOS</strong>：功能与 iOS 端无差异的部分可兼容。</li>
                             </ul>
                         </div>
                         
@@ -94,15 +100,30 @@
                 <section class="container">
                     <h2>批量导入账单格式调整</h2>
                     <p>该功能帮助用户快速格式化账单数据，方便导入一木记账。</p>
+                    
+                    <div class="feature-actions">
+                        <button class="action-button upload-btn">
+                            <span class="icon">📤</span> 上传CSV文件
+                        </button>
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                    </div>
+                    
                     <div class="feature-details">
                         <h3>功能描述</h3>
-                        <p>通过简单的界面操作，用户可以将不同格式的账单数据转换为一木记账支持的格式，大幅提高数据导入效率。</p>
+                        <p>一键处理微信支付导出的账单CSV文件，自动将不同类型的交易分类整理。</p>
                         
-                        <h3>使用场景</h3>
+                        <h3>使用方法</h3>
+                        <ol>
+                            <li>点击"上传CSV文件"按钮选择从微信支付导出的账单文件</li>
+                            <li>系统将自动处理文件并立即下载处理结果</li>
+                            <li>下载的ZIP文件中包含两个CSV文件：转账账单和收支账单</li>
+                        </ol>
+                        
+                        <h3>处理内容</h3>
                         <ul>
-                            <li>从银行导出的账单格式调整</li>
-                            <li>从其他记账软件导出数据的转换</li>
-                            <li>批量整理和清洗交易记录</li>
+                            <li>自动移除账单文件上方的描述性文本</li>
+                            <li>自动将交易记录分为转账账单和收支账单</li>
+                            <li>保留原始数据格式，便于导入一木记账</li>
                         </ul>
                     </div>
                 </section>
@@ -152,7 +173,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 一木记账工坊 - 开源项目</p>
+            <p>&copy; 2025 一木记账工坊 - 采用BSD2.0协议的开源项目</p>
             <p>
                 <a href="https://github.com/leowhite-dev/yimu-workshop" target="_blank">GitHub</a> | 
                 <a href="mailto:leowhite.devspace@gmail.com">联系我们</a>
@@ -160,6 +181,7 @@
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
