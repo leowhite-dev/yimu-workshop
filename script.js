@@ -46,10 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to process the uploaded CSV file
     function processCSVFile(file) {
         const reader = new FileReader();
-        const loadingOverlay = document.querySelector('.loading-overlay');
-        
-        // Show loading overlay
-        loadingOverlay.classList.add('active');
         
         reader.onload = function(event) {
             try {
@@ -68,17 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error processing CSV file:', error);
                 alert('处理文件时出错: ' + error.message);
-            } finally {
-                // Hide loading overlay
-                loadingOverlay.classList.remove('active');
+                
+                // Reset the file input on error
+                fileInput.value = '';
             }
         };
         
         reader.onerror = function() {
             console.error('Error reading file');
             alert('读取文件时出错');
-            // Hide loading overlay
-            loadingOverlay.classList.remove('active');
+            
+            // Reset the file input on read error
+            fileInput.value = '';
         };
         
         reader.readAsText(file);
@@ -252,11 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to create and download a ZIP file
     function createAndDownloadZip(transferRecords, paymentRecords, originalFileName) {
-        const loadingOverlay = document.querySelector('.loading-overlay');
-        
-        // Show loading overlay
-        loadingOverlay.classList.add('active');
-        
         // Load JSZip library dynamically
         if (typeof JSZip === 'undefined') {
             const script = document.createElement('script');
@@ -286,6 +278,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create file name prefix with required elements
             const filePrefix = `一木记账工坊-微信${dateStr}-`;
             
+            // Create a date with offset to fix timezone issue
+            const currentDate = new Date();
+            const localDate = new Date(currentDate.getTime() - (currentDate.getTimezoneOffset() * 60000));
+            
             // Add transfer records to the ZIP
             if (transferRecords.length > 0) {
                 // Create header row for transfer records with the proper column names
@@ -300,7 +296,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
                 }
                 
-                zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'));
+                zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'), {
+                    date: localDate
+                });
             }
             
             // Add payment records to the ZIP
@@ -317,11 +315,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     paymentRecordsWithHeader = [headerRow, ...paymentRecords.slice(1)];
                 }
                 
-                zip.file(`${filePrefix}收支账单.csv`, paymentRecordsWithHeader.join('\n'));
+                zip.file(`${filePrefix}收支账单.csv`, paymentRecordsWithHeader.join('\n'), {
+                    date: localDate
+                });
             }
             
             // Generate the ZIP file
-            zip.generateAsync({ type: 'blob' }).then(function(content) {
+            zip.generateAsync({ 
+                type: 'blob',
+                compression: "DEFLATE",
+                compressionOptions: {
+                    level: 9
+                }
+            }).then(function(content) {
                 // Create a download link
                 const downloadLink = document.createElement('a');
                 downloadLink.href = URL.createObjectURL(content);
@@ -334,14 +340,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 alert('账单处理完成，已下载ZIP文件');
                 
-                // Hide loading overlay
-                loadingOverlay.classList.remove('active');
+                // Reset the file input to allow for uploading the same file again
+                document.getElementById('csv-file-input').value = '';
             }).catch(function(error) {
                 console.error('Error creating ZIP:', error);
                 alert('创建ZIP文件时出错');
                 
-                // Hide loading overlay
-                loadingOverlay.classList.remove('active');
+                // Reset the file input on error too
+                document.getElementById('csv-file-input').value = '';
             });
         }
     }
