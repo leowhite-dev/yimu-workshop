@@ -132,8 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         lastNonEmptyIndex--;
                     }
                     
+                    // Ensure we keep at least 8 fields (index 7) to preserve the comma between remarks and tags
+                    const lastFieldToKeep = Math.max(7, lastNonEmptyIndex);
+                    
                     // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.slice(0, lastNonEmptyIndex + 1).map(field => {
+                    const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
                         // If field contains commas or quotes, wrap it in quotes
                         if (field.includes(',') || field.includes('"')) {
                             // Replace any quotes with double quotes for escaping
@@ -164,14 +167,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         ""                        // Column 9 - Empty
                     ];
                     
-                    // Remove trailing empty fields
-                    let lastNonEmptyIndexPayment = reformattedFields.length - 1;
-                    while (lastNonEmptyIndexPayment >= 0 && reformattedFields[lastNonEmptyIndexPayment] === "") {
-                        lastNonEmptyIndexPayment--;
+                    // Find the last non-empty field index
+                    let lastNonEmptyIndex = reformattedFields.length - 1;
+                    while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
+                        lastNonEmptyIndex--;
                     }
                     
+                    // Ensure we keep at least 9 fields (index 8) to preserve the comma between remarks and tags
+                    const lastFieldToKeep = Math.max(8, lastNonEmptyIndex);
+                    
                     // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.slice(0, lastNonEmptyIndexPayment + 1).map(field => {
+                    const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
                         // If field contains commas or quotes, wrap it in quotes
                         if (field.includes(',') || field.includes('"')) {
                             // Replace any quotes with double quotes for escaping
