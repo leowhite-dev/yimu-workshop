@@ -129,8 +129,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         ""                        // Column 6 - Empty (Remarks)
                     ];
                     
+                    // Remove trailing empty fields
+                    let lastNonEmptyIndex = reformattedFields.length - 1;
+                    while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
+                        lastNonEmptyIndex--;
+                    }
+                    
                     // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.map(field => {
+                    const reformattedLine = reformattedFields.slice(0, lastNonEmptyIndex + 1).map(field => {
                         // If field contains commas or quotes, wrap it in quotes
                         if (field.includes(',') || field.includes('"')) {
                             // Replace any quotes with double quotes for escaping
@@ -161,8 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         ""                        // Column 9 - Empty
                     ];
                     
+                    // Remove trailing empty fields
+                    let lastNonEmptyIndexPayment = reformattedFields.length - 1;
+                    while (lastNonEmptyIndexPayment >= 0 && reformattedFields[lastNonEmptyIndexPayment] === "") {
+                        lastNonEmptyIndexPayment--;
+                    }
+                    
                     // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.map(field => {
+                    const reformattedLine = reformattedFields.slice(0, lastNonEmptyIndexPayment + 1).map(field => {
                         // If field contains commas or quotes, wrap it in quotes
                         if (field.includes(',') || field.includes('"')) {
                             // Replace any quotes with double quotes for escaping
@@ -264,6 +276,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get the file name without extension
             const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
             
+            // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
+            let dateStr = "";
+            const dateMatch = baseFileName.match(/\d{8}-\d{8}/);
+            if (dateMatch) {
+                dateStr = `-${dateMatch[0]}`;
+            }
+            
+            // Create file name prefix with required elements
+            const filePrefix = `一木记账工坊-微信${dateStr}-`;
+            
             // Add transfer records to the ZIP
             if (transferRecords.length > 0) {
                 // Create header row for transfer records with the proper column names
@@ -278,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
                 }
                 
-                zip.file(`${baseFileName}_转账账单.csv`, transferRecordsWithHeader.join('\n'));
+                zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'));
             }
             
             // Add payment records to the ZIP
@@ -295,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     paymentRecordsWithHeader = [headerRow, ...paymentRecords.slice(1)];
                 }
                 
-                zip.file(`${baseFileName}_收支账单.csv`, paymentRecordsWithHeader.join('\n'));
+                zip.file(`${filePrefix}收支账单.csv`, paymentRecordsWithHeader.join('\n'));
             }
             
             // Generate the ZIP file
@@ -303,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create a download link
                 const downloadLink = document.createElement('a');
                 downloadLink.href = URL.createObjectURL(content);
-                downloadLink.download = `${baseFileName}_处理后的账单.zip`;
+                downloadLink.download = `${filePrefix}处理后的账单.zip`;
                 
                 // Trigger the download
                 document.body.appendChild(downloadLink);
