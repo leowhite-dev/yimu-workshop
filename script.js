@@ -99,6 +99,71 @@ document.addEventListener('DOMContentLoaded', function() {
         return lines;
     }
     
+    // 解析CSV行
+    /*
+    - CSV转义规则说明
+      - CSV转义存在标准规则，但本项目中，由于输入输出对象方完全不参照此规则，所以本项目不遵照标准规则
+      - 来源方CSV格式
+          - 微信 v8.0.57
+              - `,`和`\`不转义
+              - `"`转义为`""`
+      - 接收方CSV处理规则
+          - 一木记账 v2.1.6
+              - `,`严格被认定为分隔符，暂时没有找到转义的方式
+      - 据此
+          - 转义规则
+              - 微信
+                  - 还原`""`转义
+                  - 备注描述中碰到`,`的话，截断`,`后的内容
+     */
+    function parseCSVLine(line) {
+      const fields = [];
+      let currentField = '';
+      let inQuotes = false;
+      let i = 0;
+      
+      while (i < line.length) {
+          const char = line[i];
+          
+          if (char === '"') {
+              if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                  // 处理CSV规范的双引号转义 ("" -> ")
+                  currentField += '"';
+                  i += 2; // 跳过两个引号
+              } else {
+                  // 普通引号，切换引号标志
+                  inQuotes = !inQuotes;
+                  i++;
+              }
+          } else if (char === '\\') {
+              // 保留反斜杠字符本身
+              currentField += char;
+              i++;
+              
+              // 如果反斜杠后面还有字符，也添加它（但不特殊处理）
+              if (i < line.length) {
+                  currentField += line[i];
+                  i++;
+              }
+          } else if (char === ',' && !inQuotes) {
+              // 字段结束
+              fields.push(currentField);
+              currentField = '';
+              i++;
+          } else {
+              // 添加字符到当前字段
+              currentField += char;
+              i++;
+          }
+      }
+      
+      // 添加最后一个字段
+      fields.push(currentField);
+      
+      return fields;
+    }
+
+
     // Function to categorize records into transfer and transaction records
     function categorizeRecords(lines) {
         const transferRecords = [];
@@ -166,18 +231,9 @@ document.addEventListener('DOMContentLoaded', function() {
                   fields[10].includes('/') ? "" : fields[10],
                   ""                        // Column 9 - Empty
               ];
-              
-              // Find the last non-empty field index
-              let lastNonEmptyIndex = reformattedFields.length - 1;
-              while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
-                  lastNonEmptyIndex--;
-              }
-              
-              // Ensure we keep at least 9 fields (index 8) to preserve the comma between remarks and tags
-              const lastFieldToKeep = Math.max(8, lastNonEmptyIndex);
-              
+
               // Join fields with commas and preserve quotes if needed
-              const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
+              const reformattedLine = reformattedFields.map(field => {
                   // If field contains commas or quotes, wrap it in quotes
                   if (field.includes(',') || field.includes('"')) {
                       // Replace any quotes with double quotes for escaping
@@ -219,34 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Return original value if no processing rules match
         return field;
-    }
-    
-    // Parse CSV line handling quoted fields
-    function parseCSVLine(line) {
-        const fields = [];
-        let currentField = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            
-            if (char === '"') {
-                // Toggle the inQuotes flag
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                // End of field
-                fields.push(currentField);
-                currentField = '';
-            } else {
-                // Add character to the current field
-                currentField += char;
-            }
-        }
-        
-        // Add the last field
-        fields.push(currentField);
-        
-        return fields;
     }
     
     // Function to create and download a ZIP file
