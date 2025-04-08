@@ -56,10 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const processedData = preprocessCSV(csvContent);
                 
                 // Categorize the records
-                const { transferRecords, paymentRecords } = categorizeRecords(processedData);
+                const { transferRecords, transactionRecords } = categorizeRecords(processedData);
                 
                 // Create ZIP file with the categorized CSV files and download it
-                createAndDownloadZip(transferRecords, paymentRecords, file.name);
+                createAndDownloadZip(transferRecords, transactionRecords, file.name);
                 
             } catch (error) {
                 console.error('Error processing CSV file:', error);
@@ -99,10 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return lines;
     }
     
-    // Function to categorize records into transfer and payment records
+    // Function to categorize records into transfer and transaction records
     function categorizeRecords(lines) {
         const transferRecords = [];
-        const paymentRecords = [];
+        const transactionRecords = [];
         
         lines.forEach(line => {
             if (line.trim() === '') return; // Skip empty lines
@@ -150,51 +150,47 @@ document.addEventListener('DOMContentLoaded', function() {
                     // If the original line is likely a header or incomplete, add a properly formatted header
                     transferRecords.push("日期,转出账户,转入账户,金额,手续费,备注");
                 }
-            } else {
-                // This is a payment record - reformat it according to requirements
-                if (fields.length > 0) {
-                    // Create new array with 9 columns according to the specified requirements
-                    const reformattedFields = [
-                        fields[0],                // Column 1 ← Original Column 1
-                        fields.length > 4 ? fields[4] : "", // Column 2 ← Original Column 5
-                        fields.length > 5 ? fields[5] : "", // Column 3 ← Original Column 6
-                        "",                       // Column 4 - Empty
-                        "",                       // Column 5 - Empty
-                        "账本",                   // Column 6 - Fixed value "账本"
-                        fields.length > 6 ? fields[6] : "", // Column 7 ← Original Column 7
-                        // Column 8 ← Original Column 11, but only if it doesn't contain "/"
-                        fields.length > 10 ? (fields[10].includes('/') ? "" : fields[10]) : "",
-                        ""                        // Column 9 - Empty
-                    ];
-                    
-                    // Find the last non-empty field index
-                    let lastNonEmptyIndex = reformattedFields.length - 1;
-                    while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
-                        lastNonEmptyIndex--;
-                    }
-                    
-                    // Ensure we keep at least 9 fields (index 8) to preserve the comma between remarks and tags
-                    const lastFieldToKeep = Math.max(8, lastNonEmptyIndex);
-                    
-                    // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
-                        // If field contains commas or quotes, wrap it in quotes
-                        if (field.includes(',') || field.includes('"')) {
-                            // Replace any quotes with double quotes for escaping
-                            return '"' + field.replace(/"/g, '""') + '"';
-                        }
-                        return field;
-                    }).join(',');
-                    
-                    paymentRecords.push(reformattedLine);
-                } else {
-                    // If original line has no fields, add it as is (likely headers)
-                    paymentRecords.push(line);
-                }
+            // This is a transaction record - reformat it according to requirements
+            } else if (fields.length > 0) {
+              // Create new array with 9 columns according to the specified requirements
+              const reformattedFields = [
+                  fields[0],                // Column 1 ← Original Column 1
+                  fields[4],                // Column 2 ← Original Column 5
+                  fields[5],                // Column 3 ← Original Column 6
+                  "",                       // Column 4 - Empty
+                  "",                       // Column 5 - Empty
+                  "账本",                   // Column 6 - Fixed value "账本"
+                  // Column 7 ← Original Column 7 with additional rule for "收入" type
+                  fields[4] === "收入" && fields[6].includes("/") ? "零钱" : fields[6],
+                  // Column 8 ← Original Column 11, but only if it doesn't contain "/"
+                  fields[10].includes('/') ? "" : fields[10],
+                  ""                        // Column 9 - Empty
+              ];
+              
+              // Find the last non-empty field index
+              let lastNonEmptyIndex = reformattedFields.length - 1;
+              while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
+                  lastNonEmptyIndex--;
+              }
+              
+              // Ensure we keep at least 9 fields (index 8) to preserve the comma between remarks and tags
+              const lastFieldToKeep = Math.max(8, lastNonEmptyIndex);
+              
+              // Join fields with commas and preserve quotes if needed
+              const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
+                  // If field contains commas or quotes, wrap it in quotes
+                  if (field.includes(',') || field.includes('"')) {
+                      // Replace any quotes with double quotes for escaping
+                      return '"' + field.replace(/"/g, '""') + '"';
+                  }
+                  return field;
+              }).join(',');
+              
+              transactionRecords.push(reformattedLine);
             }
         });
         
-        return { transferRecords, paymentRecords };
+        return { transferRecords, transactionRecords };
     }
     
     // Function to process transfer in account according to requirements
@@ -254,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Function to create and download a ZIP file
-    function createAndDownloadZip(transferRecords, paymentRecords, originalFileName) {
+    function createAndDownloadZip(transferRecords, transactionRecords, originalFileName) {
         // Load JSZip library dynamically
         if (typeof JSZip === 'undefined') {
             const script = document.createElement('script');
@@ -307,21 +303,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Add payment records to the ZIP
-            if (paymentRecords.length > 0) {
-                // Create header row for payment records with the proper column names
+            // Add transaction records to the ZIP
+            if (transactionRecords.length > 0) {
+                // Create header row for transaction records with the proper column names
                 const headerRow = "日期,收支类型,金额,类别,子类,所属账本,收支账户,备注,标签";
                 
-                // If there's only one payment record or the first record doesn't look like a header,
+                // If there's only one transaction record or the first record doesn't look like a header,
                 // just add our custom header. Otherwise, replace the first record (original header)
-                let paymentRecordsWithHeader;
-                if (paymentRecords.length === 1 || (!paymentRecords[0].includes('交易时间') && !paymentRecords[0].includes('日期'))) {
-                    paymentRecordsWithHeader = [headerRow, ...paymentRecords];
+                let transactionRecordsWithHeader;
+                if (transactionRecords.length === 1 || (!transactionRecords[0].includes('交易时间') && !transactionRecords[0].includes('日期'))) {
+                    transactionRecordsWithHeader = [headerRow, ...transactionRecords];
                 } else {
-                    paymentRecordsWithHeader = [headerRow, ...paymentRecords.slice(1)];
+                    transactionRecordsWithHeader = [headerRow, ...transactionRecords.slice(1)];
                 }
                 
-                zip.file(`${filePrefix}收支账单.csv`, paymentRecordsWithHeader.join('\n'), {
+                zip.file(`${filePrefix}收支账单.csv`, transactionRecordsWithHeader.join('\n'), {
                     date: localDate
                 });
             }

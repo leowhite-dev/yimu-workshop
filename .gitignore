@@ -1,4 +1,6 @@
-test/
-official_template/
 bug/
+debug/
+official_template/
+test/
+
 .DS_Store
