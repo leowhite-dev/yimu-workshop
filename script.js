@@ -99,99 +99,124 @@ document.addEventListener('DOMContentLoaded', function() {
         return lines;
     }
 
-    // 改进的CSV行解析函数，更好地处理带有逗号和引号的备注
-    function parseCSVLine(line) {
-      const fields = [];
-      let currentField = '';
-      let inQuotes = false;
-      let i = 0;
+    // 通用的CSV字段格式化函数 - 处理引号和逗号
+    function formatCSVField(field) {
+        if (!field || field === "") return field;
 
-      while (i < line.length) {
-          const char = line[i];
-
-          if (char === '"') {
-              if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-                  // 处理CSV规范的双引号转义 ("" -> ")
-                  currentField += '"';
-                  i += 2; // 跳过两个引号
-              } else {
-                  // 普通引号，切换引号标志
-                  inQuotes = !inQuotes;
-                  i++;
-              }
-          } else if (char === '\\') {
-              // 保留反斜杠字符本身
-              currentField += char;
-              i++;
-
-              // 如果反斜杠后面还有字符，也添加它（但不特殊处理）
-              if (i < line.length) {
-                  currentField += line[i];
-                  i++;
-              }
-          } else if (char === ',' && !inQuotes) {
-              // 字段结束，只有在不在引号内时才分割字段
-              fields.push(currentField);
-              currentField = '';
-              i++;
-          } else {
-              // 添加字符到当前字段
-              currentField += char;
-              i++;
-          }
-      }
-
-      // 添加最后一个字段
-      fields.push(currentField);
-
-      return fields;
+        // 如果字段包含逗号或引号，需要用引号包裹并转义内部引号
+        if (field.includes(',') || field.includes('"')) {
+            return '"' + field.replace(/"/g, '""') + '"';
+        }
+        return field;
     }
 
-    // 处理备注文本的函数
+    // 改进的CSV行解析函数，更好地处理带有逗号和引号的备注
+    function parseCSVLine(line) {
+        const fields = [];
+        let currentField = '';
+        let inQuotes = false;
+        let i = 0;
+
+        while (i < line.length) {
+            const char = line[i];
+
+            if (char === '"') {
+                if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                    // 处理CSV规范的双引号转义 ("" -> ")
+                    currentField += '"';
+                    i += 2; // 跳过两个引号
+                } else {
+                    // 普通引号，切换引号标志
+                    inQuotes = !inQuotes;
+                    i++;
+                }
+            } else if (char === '\\') {
+                // 处理转义字符
+                currentField += char;
+                i++;
+                // 保留转义后的字符
+                if (i < line.length) {
+                    currentField += line[i];
+                    i++;
+                }
+            } else if (char === ',' && !inQuotes) {
+                // 字段结束，只有在不在引号内时才分割字段
+                fields.push(currentField);
+                currentField = '';
+                i++;
+            } else {
+                // 添加字符到当前字段
+                currentField += char;
+                i++;
+            }
+        }
+
+        // 添加最后一个字段
+        fields.push(currentField);
+        return fields;
+    }
+
+    // 处理备注文本的函数 - 简化版
     function processNoteText(text) {
-      // 如果备注是 "/" 则不处理
-      if (text === "/") {
-        return text;
-      }
+        // 特殊情况处理
+        if (!text || text === "/") return text;
 
-      // 去掉两端的引号
-      if (text.startsWith('"') && text.endsWith('"')) {
-        text = text.substring(1, text.length - 1);
-      }
-
-      // 处理连续的两个引号变成一个引号，但保留反斜杠和逗号
-      let processed = '';
-      let i = 0;
-
-      while (i < text.length) {
-        // 保留反斜杠和其后的字符
-        if (text[i] === '\\' && i + 1 < text.length) {
-          processed += text[i] + text[i+1];
-          i += 2;
+        // 去掉两端的引号
+        if (text.startsWith('"') && text.endsWith('"')) {
+            text = text.substring(1, text.length - 1);
         }
-        // 处理连续引号
-        else if (text[i] === '"' && i + 1 < text.length && text[i+1] === '"') {
-          processed += '"';
-          i += 2;
-        }
-        // 保留逗号
-        else if (text[i] === ',') {
-          processed += ',';
-          i++;
-        }
-        // 其他字符保持不变
-        else {
-          processed += text[i];
-          i++;
-        }
-      }
 
-      // 如果字符串以引号结尾，删除最后一个引号
-      if (processed.endsWith('"')) {
-        processed = processed.substring(0, processed.length - 1);
-      }
+        // 使用正则表达式简化处理
+        // 1. 处理连续引号 "" -> "
+        // 2. 保留反斜杠转义
+        // 3. 保留逗号
+        return text
+            .replace(/""/g, '"')  // 处理连续引号
+            .replace(/\\(.)/g, '\\$1')  // 保留转义字符
+            .replace(/"$/g, '');  // 移除末尾引号
+    }
 
-      return processed;
+    // 提取备注文本的辅助函数
+    function extractNoteText(line, fields) {
+        let noteText = "";
+
+        // 先检查原始行中是否包含备注字段
+        const originalLine = line.trim();
+        const commentStart = originalLine.indexOf('"转账备注:');
+
+        if (commentStart !== -1) {
+            // 如果原始行中包含备注字段，直接提取备注字段
+            // 找到备注字段的结束位置
+            const possibleEndMarkers = ['","收入"', '",'];
+            let commentEnd = -1;
+
+            // 尝试所有可能的结束标记
+            for (const marker of possibleEndMarkers) {
+                const endPos = originalLine.indexOf(marker, commentStart);
+                if (endPos !== -1) {
+                    commentEnd = endPos;
+                    break;
+                }
+            }
+
+            if (commentEnd !== -1) {
+                // 提取备注字段
+                const commentField = originalLine.substring(commentStart, commentEnd + 1);
+                noteText = processNoteText(commentField);
+            }
+        } else {
+            // 如果原始行中不包含备注字段，使用字段数组中的字段
+            // 根据规则判断备注所在位置
+            if (fields.length > 1 && fields[1] === "转账" && fields.length > 3) {
+                // 如果原本第二列是"转账"，则备注在原本的第四列
+                noteText = fields.length > 3 ? processNoteText(fields[3]) : "";
+            } else if (fields.length > 10) {
+                // 否则备注在原本的第11列
+                noteText = processNoteText(fields[10]);
+            }
+        }
+
+        return noteText;
     }
 
     // Function to categorize records into transfer and transaction records
@@ -231,14 +256,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const lastFieldToKeep = Math.max(7, lastNonEmptyIndex);
 
                     // Join fields with commas and preserve quotes if needed
-                    const reformattedLine = reformattedFields.slice(0, lastFieldToKeep + 1).map(field => {
-                        // If field contains commas or quotes, wrap it in quotes
-                        if (field.includes(',') || field.includes('"')) {
-                            // Replace any quotes with double quotes for escaping
-                            return '"' + field.replace(/"/g, '""') + '"';
-                        }
-                        return field;
-                    }).join(',');
+                    const reformattedLine = reformattedFields
+                        .slice(0, lastFieldToKeep + 1)
+                        .map(formatCSVField)
+                        .join(',');
 
                     transferRecords.push(reformattedLine);
                 } else {
@@ -248,37 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // This is a transaction record - reformat it according to requirements
             } else if (fields.length > 0) {
                 // 获取备注内容并进行处理
-                let noteText = "";
-
-                // 先检查原始行中是否包含备注字段
-                const originalLine = line.trim();
-                const commentStart = originalLine.indexOf('"转账备注:');
-
-                if (commentStart !== -1) {
-                    // 如果原始行中包含备注字段，直接提取备注字段
-                    // 找到备注字段的结束位置
-                    let commentEnd = originalLine.indexOf('","收入"', commentStart);
-                    if (commentEnd === -1) {
-                        // 如果找不到结束标记，尝试其他可能的结束模式
-                        commentEnd = originalLine.indexOf('",', commentStart);
-                    }
-
-                    if (commentEnd !== -1) {
-                        // 提取备注字段
-                        const commentField = originalLine.substring(commentStart, commentEnd + 1);
-                        noteText = processNoteText(commentField);
-                    }
-                } else {
-                    // 如果原始行中不包含备注字段，使用字段数组中的字段
-                    // 根据规则判断备注所在位置
-                    if (fields.length > 1 && fields[1] === "转账" && fields.length > 3) {
-                        // 如果原本第二列是"转账"，则备注在原本的第四列
-                        noteText = fields.length > 3 ? processNoteText(fields[3]) : "";
-                    } else if (fields.length > 10) {
-                        // 否则备注在原本的第11列
-                        noteText = processNoteText(fields[10]);
-                    }
-                }
+                const noteText = extractNoteText(line, fields);
 
                 // Create new array with 9 columns according to the specified requirements
                 const reformattedFields = [
@@ -295,14 +286,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 ];
 
                 // Join fields with commas and preserve quotes if needed
-                const reformattedLine = reformattedFields.map(field => {
-                    // If field contains commas or quotes, wrap it in quotes
-                    if (field.includes(',') || field.includes('"')) {
-                        // Replace any quotes with double quotes for escaping
-                        return '"' + field.replace(/"/g, '""') + '"';
-                    }
-                    return field;
-                }).join(',');
+                const reformattedLine = reformattedFields
+                    .map(formatCSVField)
+                    .join(',');
 
                 transactionRecords.push(reformattedLine);
             }
@@ -341,106 +327,93 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to create and download a ZIP file
     function createAndDownloadZip(transferRecords, transactionRecords, originalFileName) {
-        // Load JSZip library dynamically
-        if (typeof JSZip === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-            script.onload = function() {
-                createZipAndDownload();
-            };
-            document.head.appendChild(script);
-        } else {
-            createZipAndDownload();
+        // JSZip库已在HTML中引入，直接使用
+        // Create a new ZIP file
+        const zip = new JSZip();
+
+        // Get the file name without extension
+        const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
+
+        // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
+        let dateStr = "";
+        const dateMatch = baseFileName.match(/\d{8}-\d{8}/);
+        if (dateMatch) {
+            dateStr = `-${dateMatch[0]}`;
         }
 
-        function createZipAndDownload() {
-            // Create a new ZIP file
-            const zip = new JSZip();
+        // Create file name prefix with required elements
+        const filePrefix = `一木记账工坊-微信${dateStr}-`;
 
-            // Get the file name without extension
-            const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
+        // Create a date with offset to fix timezone issue
+        const currentDate = new Date();
+        const localDate = new Date(currentDate.getTime() - (currentDate.getTimezoneOffset() * 60000));
 
-            // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
-            let dateStr = "";
-            const dateMatch = baseFileName.match(/\d{8}-\d{8}/);
-            if (dateMatch) {
-                dateStr = `-${dateMatch[0]}`;
+        // Add transfer records to the ZIP
+        if (transferRecords.length > 0) {
+            // Create header row for transfer records with the proper column names
+            const headerRow = "日期,转出账户,转入账户,金额,手续费,备注";
+
+            // If there's only one transfer record or the first record doesn't look like a header,
+            // just add our custom header. Otherwise, replace the first record (original header)
+            let transferRecordsWithHeader;
+            if (transferRecords.length === 1 || (!transferRecords[0].includes('日期'))) {
+                transferRecordsWithHeader = [headerRow, ...transferRecords];
+            } else {
+                transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
             }
 
-            // Create file name prefix with required elements
-            const filePrefix = `一木记账工坊-微信${dateStr}-`;
-
-            // Create a date with offset to fix timezone issue
-            const currentDate = new Date();
-            const localDate = new Date(currentDate.getTime() - (currentDate.getTimezoneOffset() * 60000));
-
-            // Add transfer records to the ZIP
-            if (transferRecords.length > 0) {
-                // Create header row for transfer records with the proper column names
-                const headerRow = "日期,转出账户,转入账户,金额,手续费,备注";
-
-                // If there's only one transfer record or the first record doesn't look like a header,
-                // just add our custom header. Otherwise, replace the first record (original header)
-                let transferRecordsWithHeader;
-                if (transferRecords.length === 1 || (!transferRecords[0].includes('日期'))) {
-                    transferRecordsWithHeader = [headerRow, ...transferRecords];
-                } else {
-                    transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
-                }
-
-                zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'), {
-                    date: localDate
-                });
-            }
-
-            // Add transaction records to the ZIP
-            if (transactionRecords.length > 0) {
-                // Create header row for transaction records with the proper column names
-                const headerRow = "日期,收支类型,金额,类别,子类,所属账本,收支账户,备注,标签";
-
-                // If there's only one transaction record or the first record doesn't look like a header,
-                // just add our custom header. Otherwise, replace the first record (original header)
-                let transactionRecordsWithHeader;
-                if (transactionRecords.length === 1 || (!transactionRecords[0].includes('交易时间') && !transactionRecords[0].includes('日期'))) {
-                    transactionRecordsWithHeader = [headerRow, ...transactionRecords];
-                } else {
-                    transactionRecordsWithHeader = [headerRow, ...transactionRecords.slice(1)];
-                }
-
-                zip.file(`${filePrefix}收支账单.csv`, transactionRecordsWithHeader.join('\n'), {
-                    date: localDate
-                });
-            }
-
-            // Generate the ZIP file
-            zip.generateAsync({
-                type: 'blob',
-                compression: "DEFLATE",
-                compressionOptions: {
-                    level: 9
-                }
-            }).then(function(content) {
-                // Create a download link
-                const downloadLink = document.createElement('a');
-                downloadLink.href = URL.createObjectURL(content);
-                downloadLink.download = `${filePrefix}处理后的账单.zip`;
-
-                // Trigger the download
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-
-                alert('账单处理完成，已下载ZIP文件');
-
-                // Reset the file input to allow for uploading the same file again
-                document.getElementById('csv-file-input').value = '';
-            }).catch(function(error) {
-                console.error('Error creating ZIP:', error);
-                alert('创建ZIP文件时出错');
-
-                // Reset the file input on error too
-                document.getElementById('csv-file-input').value = '';
+            zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'), {
+                date: localDate
             });
         }
+
+        // Add transaction records to the ZIP
+        if (transactionRecords.length > 0) {
+            // Create header row for transaction records with the proper column names
+            const headerRow = "日期,收支类型,金额,类别,子类,所属账本,收支账户,备注,标签";
+
+            // If there's only one transaction record or the first record doesn't look like a header,
+            // just add our custom header. Otherwise, replace the first record (original header)
+            let transactionRecordsWithHeader;
+            if (transactionRecords.length === 1 || (!transactionRecords[0].includes('交易时间') && !transactionRecords[0].includes('日期'))) {
+                transactionRecordsWithHeader = [headerRow, ...transactionRecords];
+            } else {
+                transactionRecordsWithHeader = [headerRow, ...transactionRecords.slice(1)];
+            }
+
+            zip.file(`${filePrefix}收支账单.csv`, transactionRecordsWithHeader.join('\n'), {
+                date: localDate
+            });
+        }
+
+        // Generate the ZIP file
+        zip.generateAsync({
+            type: 'blob',
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 9
+            }
+        }).then(function(content) {
+            // Create a download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(content);
+            downloadLink.download = `${filePrefix}处理后的账单.zip`;
+
+            // Trigger the download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            alert('账单处理完成，已下载ZIP文件');
+
+            // Reset the file input to allow for uploading the same file again
+            document.getElementById('csv-file-input').value = '';
+        }).catch(function(error) {
+            console.error('Error creating ZIP:', error);
+            alert('创建ZIP文件时出错');
+
+            // Reset the file input on error too
+            document.getElementById('csv-file-input').value = '';
+        });
     }
 });
