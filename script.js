@@ -1,5 +1,8 @@
 // Wrap the entire script in an IIFE to avoid global scope pollution
 (function() {
+    // Global variables for UI state management
+    let isProcessing = false;
+
     // Helper functions moved outside DOMContentLoaded but within the IIFE
 
     // Function to preprocess the CSV content
@@ -246,95 +249,288 @@
         return field;
     }
 
+    // Function to show loading state
+    function showLoading(message = '处理中...') {
+        // Check if loading overlay already exists
+        if (document.getElementById('loading-overlay')) {
+            return;
+        }
+
+        isProcessing = true;
+
+        // Create loading overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'loading-overlay';
+
+        // Create spinner
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+
+        // Create message element
+        const messageEl = document.createElement('p');
+        messageEl.id = 'loading-message';
+        messageEl.textContent = message;
+
+        // Append elements
+        overlay.appendChild(spinner);
+        overlay.appendChild(messageEl);
+        document.body.appendChild(overlay);
+    }
+
+    // Function to hide loading state
+    function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.add('fade-out');
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+                isProcessing = false;
+            }, 500); // Match this with CSS transition time
+        } else {
+            isProcessing = false;
+        }
+    }
+
+    // Function to update loading message
+    function updateLoadingMessage(message) {
+        const messageEl = document.getElementById('loading-message');
+        if (messageEl) {
+            messageEl.textContent = message;
+        }
+    }
+
+    // Function to show notification
+    function showNotification(message, type = 'success', duration = 5000) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+
+        // Create message content
+        const content = document.createElement('div');
+        content.className = 'notification-content';
+
+        // Add appropriate icon based on type
+        const icon = document.createElement('i');
+        if (type === 'success') {
+            icon.className = 'fas fa-check-circle';
+        } else if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle';
+        } else if (type === 'warning') {
+            icon.className = 'fas fa-exclamation-triangle';
+        } else if (type === 'info') {
+            icon.className = 'fas fa-info-circle';
+        }
+
+        // Create text element
+        const text = document.createElement('span');
+        text.textContent = message;
+
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'notification-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', () => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+
+        // Assemble notification
+        content.appendChild(icon);
+        content.appendChild(text);
+        notification.appendChild(content);
+        notification.appendChild(closeBtn);
+
+        // Add to document
+        const container = document.querySelector('.notification-container') || createNotificationContainer();
+        container.appendChild(notification);
+
+        // Show with animation
+        setTimeout(() => notification.classList.add('show'), 10);
+
+        // Auto-remove after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, duration);
+        }
+
+        return notification;
+    }
+
+    // Helper function to create notification container
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Function to validate CSV file
+    function validateCSVFile(file) {
+        return new Promise((resolve, reject) => {
+            // Check if file exists
+            if (!file) {
+                reject(new Error('未选择文件'));
+                return;
+            }
+
+            // Check file extension
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (fileExt !== 'csv') {
+                reject(new Error(`文件类型不支持: ${fileExt}。请上传CSV文件`));
+                return;
+            }
+
+            // Check file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                reject(new Error(`文件过大: ${(file.size / (1024 * 1024)).toFixed(2)}MB。最大支持10MB`));
+                return;
+            }
+
+            // Basic content validation by reading first few bytes
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const sample = e.target.result.slice(0, 1000); // Read first 1000 chars
+
+                    // Check if it's likely a WeChat payment record
+                    if (!sample.includes('微信支付') && !sample.includes('账单') && !sample.includes('交易时间')) {
+                        reject(new Error('文件内容不符合微信支付账单格式'));
+                        return;
+                    }
+
+                    resolve(file);
+                } catch (error) {
+                    reject(new Error(`文件内容验证失败: ${error.message}`));
+                }
+            };
+
+            reader.onerror = function() {
+                reject(new Error('读取文件失败'));
+            };
+
+            // Read as text to check content
+            reader.readAsText(file.slice(0, 1000));
+        });
+    }
+
     // Function to create and download a ZIP file
     function createAndDownloadZip(transferRecords, transactionRecords, originalFileName) {
-        // JSZip库已在HTML中引入，直接使用
-        // Create a new ZIP file
-        const zip = new JSZip();
+        return new Promise((resolve, reject) => {
+            try {
+                updateLoadingMessage('正在创建ZIP文件...');
 
-        // Get the file name without extension
-        const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
+                // JSZip库已在HTML中引入，直接使用
+                // Create a new ZIP file
+                const zip = new JSZip();
 
-        // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
-        let dateStr = "";
-        const dateMatch = baseFileName.match(/\d{8}-\d{8}/);
-        if (dateMatch) {
-            dateStr = `-${dateMatch[0]}`;
-        }
+                // Get the file name without extension
+                const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
 
-        // Create file name prefix with required elements
-        const filePrefix = `一木记账工坊-微信${dateStr}-`;
+                // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
+                let dateStr = "";
+                const dateMatch = baseFileName.match(/\d{8}-\d{8}/);
+                if (dateMatch) {
+                    dateStr = `-${dateMatch[0]}`;
+                }
 
-        // Create a date with offset to fix timezone issue
-        const currentDate = new Date();
-        const localDate = new Date(currentDate.getTime() - (currentDate.getTimezoneOffset() * 60000));
+                // Create file name prefix with required elements
+                const filePrefix = `一木记账工坊-微信${dateStr}-`;
 
-        // Add transfer records to the ZIP
-        if (transferRecords.length > 0) {
-            // Create header row for transfer records with the proper column names
-            const headerRow = "日期,转出账户,转入账户,金额,手续费,备注";
+                // Create a date with offset to fix timezone issue
+                const currentDate = new Date();
+                const localDate = new Date(currentDate.getTime() - (currentDate.getTimezoneOffset() * 60000));
 
-            // If there's only one transfer record or the first record doesn't look like a header,
-            // just add our custom header. Otherwise, replace the first record (original header)
-            let transferRecordsWithHeader;
-            if (transferRecords.length === 1 || (!transferRecords[0].includes('日期'))) {
-                transferRecordsWithHeader = [headerRow, ...transferRecords];
-            } else {
-                transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
+                // Add transfer records to the ZIP
+                if (transferRecords.length > 0) {
+                    updateLoadingMessage('正在处理转账记录...');
+                    // Create header row for transfer records with the proper column names
+                    const headerRow = "日期,转出账户,转入账户,金额,手续费,备注";
+
+                    // If there's only one transfer record or the first record doesn't look like a header,
+                    // just add our custom header. Otherwise, replace the first record (original header)
+                    let transferRecordsWithHeader;
+                    if (transferRecords.length === 1 || (!transferRecords[0].includes('日期'))) {
+                        transferRecordsWithHeader = [headerRow, ...transferRecords];
+                    } else {
+                        transferRecordsWithHeader = [headerRow, ...transferRecords.slice(1)];
+                    }
+
+                    zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'), {
+                        date: localDate
+                    });
+                }
+
+                // Add transaction records to the ZIP
+                if (transactionRecords.length > 0) {
+                    updateLoadingMessage('正在处理收支记录...');
+                    // Create header row for transaction records with the proper column names
+                    const headerRow = "日期,收支类型,金额,类别,子类,所属账本,收支账户,备注,标签";
+
+                    // If there's only one transaction record or the first record doesn't look like a header,
+                    // just add our custom header. Otherwise, replace the first record (original header)
+                    let transactionRecordsWithHeader;
+                    if (transactionRecords.length === 1 || (!transactionRecords[0].includes('交易时间') && !transactionRecords[0].includes('日期'))) {
+                        transactionRecordsWithHeader = [headerRow, ...transactionRecords];
+                    } else {
+                        transactionRecordsWithHeader = [headerRow, ...transactionRecords.slice(1)];
+                    }
+
+                    zip.file(`${filePrefix}收支账单.csv`, transactionRecordsWithHeader.join('\n'), {
+                        date: localDate
+                    });
+                }
+
+                updateLoadingMessage('正在生成ZIP文件...');
+                // Generate the ZIP file
+                zip.generateAsync({
+                    type: 'blob',
+                    compression: "DEFLATE",
+                    compressionOptions: {
+                        level: 9
+                    }
+                }).then(function(content) {
+                    // Create a download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(content);
+                    downloadLink.download = `${filePrefix}处理后的账单.zip`;
+
+                    // Trigger the download
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    // Create summary for notification
+                    const summary = {
+                        transferCount: transferRecords.length > 0 ? transferRecords.length - 1 : 0,
+                        transactionCount: transactionRecords.length > 0 ? transactionRecords.length - 1 : 0,
+                        fileName: `${filePrefix}处理后的账单.zip`
+                    };
+
+                    resolve(summary);
+                }).catch(function(error) {
+                    console.error('Error creating ZIP:', error);
+                    reject(new Error(`创建ZIP文件失败: ${error.message}`));
+                });
+            } catch (error) {
+                console.error('Error in ZIP creation process:', error);
+                reject(new Error(`ZIP文件处理过程中出错: ${error.message}`));
             }
-
-            zip.file(`${filePrefix}转账账单.csv`, transferRecordsWithHeader.join('\n'), {
-                date: localDate
-            });
-        }
-
-        // Add transaction records to the ZIP
-        if (transactionRecords.length > 0) {
-            // Create header row for transaction records with the proper column names
-            const headerRow = "日期,收支类型,金额,类别,子类,所属账本,收支账户,备注,标签";
-
-            // If there's only one transaction record or the first record doesn't look like a header,
-            // just add our custom header. Otherwise, replace the first record (original header)
-            let transactionRecordsWithHeader;
-            if (transactionRecords.length === 1 || (!transactionRecords[0].includes('交易时间') && !transactionRecords[0].includes('日期'))) {
-                transactionRecordsWithHeader = [headerRow, ...transactionRecords];
-            } else {
-                transactionRecordsWithHeader = [headerRow, ...transactionRecords.slice(1)];
-            }
-
-            zip.file(`${filePrefix}收支账单.csv`, transactionRecordsWithHeader.join('\n'), {
-                date: localDate
-            });
-        }
-
-        // Generate the ZIP file
-        zip.generateAsync({
-            type: 'blob',
-            compression: "DEFLATE",
-            compressionOptions: {
-                level: 9
-            }
-        }).then(function(content) {
-            // Create a download link
-            const downloadLink = document.createElement('a');
-            downloadLink.href = URL.createObjectURL(content);
-            downloadLink.download = `${filePrefix}处理后的账单.zip`;
-
-            // Trigger the download
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-
-            alert('账单处理完成，已下载ZIP文件');
-
-            // Reset the file input to allow for uploading the same file again
-            document.getElementById('csv-file-input').value = '';
-        }).catch(function(error) {
-            console.error('Error creating ZIP:', error);
-            alert('创建ZIP文件时出错');
-
-            // Reset the file input on error too
-            document.getElementById('csv-file-input').value = '';
         });
     }
 
@@ -345,6 +541,9 @@
         const tabContents = document.querySelectorAll('.tab-content');
         const uploadBtn = document.querySelector('.upload-btn');
         const fileInput = document.getElementById('csv-file-input');
+
+        // Create notification container on page load
+        createNotificationContainer();
 
         // Setup tab click behavior
         tabButtons.forEach(button => {
@@ -370,6 +569,11 @@
         // Upload CSV file button functionality
         if (uploadBtn && fileInput) {
             uploadBtn.addEventListener('click', function() {
+                // Prevent multiple uploads while processing
+                if (isProcessing) {
+                    showNotification('正在处理文件，请稍候...', 'info');
+                    return;
+                }
                 fileInput.click();
             });
 
@@ -381,44 +585,147 @@
                     processCSVFile(file); // Call the processing function
                 }
             });
+
+            // Add drag and drop support
+            const dropZone = document.querySelector('.upload-area') || document.body;
+
+            // Make the upload area clickable
+            if (dropZone && dropZone !== document.body) {
+                dropZone.addEventListener('click', function() {
+                    // Prevent multiple uploads while processing
+                    if (isProcessing) {
+                        showNotification('正在处理文件，请稍候...', 'info');
+                        return;
+                    }
+                    fileInput.click();
+                });
+            }
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add('highlight');
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove('highlight');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                if (isProcessing) {
+                    showNotification('正在处理文件，请稍候...', 'info');
+                    return;
+                }
+
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+
+                if (file) {
+                    // Update file input for consistency
+                    fileInput.files = dt.files;
+                    processCSVFile(file);
+                }
+            }
         }
 
         // Function to process the uploaded CSV file (kept separate for clarity)
         function processCSVFile(file) {
-            const reader = new FileReader();
+            // Prevent processing if already in progress
+            if (isProcessing) {
+                showNotification('正在处理文件，请稍候...', 'info');
+                return;
+            }
 
-            reader.onload = function(event) {
-                try {
-                    // Get the file content
-                    const csvContent = event.target.result;
+            // Show loading indicator
+            showLoading('正在验证文件...');
 
+            // First validate the file
+            validateCSVFile(file)
+                .then(() => {
+                    updateLoadingMessage('正在读取文件...');
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+
+                        reader.onload = function(event) {
+                            try {
+                                resolve(event.target.result);
+                            } catch (error) {
+                                reject(new Error(`读取文件内容失败: ${error.message}`));
+                            }
+                        };
+
+                        reader.onerror = function() {
+                            reject(new Error('读取文件失败'));
+                        };
+
+                        reader.readAsText(file);
+                    });
+                })
+                .then(csvContent => {
+                    updateLoadingMessage('正在预处理CSV数据...');
                     // Process the CSV content using the helper function
                     const processedData = preprocessCSV(csvContent);
 
+                    if (processedData.length === 0) {
+                        throw new Error('处理后的CSV数据为空，请检查文件格式是否正确');
+                    }
+
+                    return processedData;
+                })
+                .then(processedData => {
+                    updateLoadingMessage('正在分类记录...');
                     // Categorize the records using the helper function
                     const { transferRecords, transactionRecords } = categorizeRecords(processedData);
 
-                    // Create ZIP file with the categorized CSV files and download it using the helper function
-                    createAndDownloadZip(transferRecords, transactionRecords, file.name);
+                    if (transferRecords.length === 0 && transactionRecords.length === 0) {
+                        throw new Error('未找到有效的转账或交易记录，请检查文件格式');
+                    }
 
-                } catch (error) {
+                    return { transferRecords, transactionRecords };
+                })
+                .then(({ transferRecords, transactionRecords }) => {
+                    // Create ZIP file with the categorized CSV files and download it
+                    return createAndDownloadZip(transferRecords, transactionRecords, file.name);
+                })
+                .then(summary => {
+                    // Success handling
+                    hideLoading();
+
+                    // Reset the file input to allow for uploading the same file again
+                    fileInput.value = '';
+
+                    // Show success notification with summary
+                    const message = `处理完成！共处理 ${summary.transferCount} 条转账记录和 ${summary.transactionCount} 条交易记录。`;
+                    showNotification(message, 'success');
+                })
+                .catch(error => {
+                    // Error handling
                     console.error('Error processing CSV file:', error);
-                    alert('处理文件时出错: ' + error.message);
+                    hideLoading();
 
                     // Reset the file input on error
                     fileInput.value = '';
-                }
-            };
 
-            reader.onerror = function() {
-                console.error('Error reading file');
-                alert('读取文件时出错');
-
-                // Reset the file input on read error
-                fileInput.value = '';
-            };
-
-            reader.readAsText(file);
+                    // Show error notification
+                    showNotification(`处理失败: ${error.message}`, 'error');
+                });
         }
     }); // End of DOMContentLoaded listener
 
