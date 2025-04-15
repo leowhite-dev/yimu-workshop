@@ -37,3 +37,13 @@
 - 通过 [leowhite.devspace@gmail.com](mailto:leowhite.devspace@gmail.com) 联系开发者
 
 感谢你的支持与参与！
+
+## 项目结构
+项目目录结构说明：
+- `script.js`：主要功能实现的JavaScript脚本
+- `index.html`：网页版工具入口
+- `style.css`：样式文件
+- 其他未加入版本控制的临时文件不作说明
+
+> **注意**：  
+> `.gitignore`配置了部分不加入版本控制的内容，请自行查看。
