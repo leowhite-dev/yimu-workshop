@@ -1,85 +1,6 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.querySelector('.sidebar');
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    // Setup tab click behavior
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove active class from all buttons and contents
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-
-            // Add active class to clicked button
-            this.classList.add('active');
-
-            // Show corresponding content
-            const tabId = this.getAttribute('data-tab');
-            document.getElementById(tabId).classList.add('active');
-        });
-    });
-
-    // Initialize the first tab as active if no tab is active
-    if (tabButtons.length > 0 && !document.querySelector('.tab-button.active')) {
-        tabButtons[0].click();
-    }
-
-    // Upload CSV file button functionality
-    const uploadBtn = document.querySelector('.upload-btn');
-    const fileInput = document.getElementById('csv-file-input');
-
-    if (uploadBtn && fileInput) {
-        uploadBtn.addEventListener('click', function() {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                // Handle the CSV file upload
-                console.log('Uploaded file:', file.name);
-                processCSVFile(file);
-            }
-        });
-    }
-
-    // Function to process the uploaded CSV file
-    function processCSVFile(file) {
-        const reader = new FileReader();
-
-        reader.onload = function(event) {
-            try {
-                // Get the file content
-                const csvContent = event.target.result;
-
-                // Process the CSV content
-                const processedData = preprocessCSV(csvContent);
-
-                // Categorize the records
-                const { transferRecords, transactionRecords } = categorizeRecords(processedData);
-
-                // Create ZIP file with the categorized CSV files and download it
-                createAndDownloadZip(transferRecords, transactionRecords, file.name);
-
-            } catch (error) {
-                console.error('Error processing CSV file:', error);
-                alert('处理文件时出错: ' + error.message);
-
-                // Reset the file input on error
-                fileInput.value = '';
-            }
-        };
-
-        reader.onerror = function() {
-            console.error('Error reading file');
-            alert('读取文件时出错');
-
-            // Reset the file input on read error
-            fileInput.value = '';
-        };
-
-        reader.readAsText(file);
-    }
+// Wrap the entire script in an IIFE to avoid global scope pollution
+(function() {
+    // Helper functions moved outside DOMContentLoaded but within the IIFE
 
     // Function to preprocess the CSV content
     function preprocessCSV(csvContent) {
@@ -416,4 +337,89 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('csv-file-input').value = '';
         });
     }
-});
+
+    // Main execution logic after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const uploadBtn = document.querySelector('.upload-btn');
+        const fileInput = document.getElementById('csv-file-input');
+
+        // Setup tab click behavior
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button
+                this.classList.add('active');
+
+                // Show corresponding content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Initialize the first tab as active if no tab is active
+        if (tabButtons.length > 0 && !document.querySelector('.tab-button.active')) {
+            tabButtons[0].click();
+        }
+
+        // Upload CSV file button functionality
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Handle the CSV file upload
+                    console.log('Uploaded file:', file.name);
+                    processCSVFile(file); // Call the processing function
+                }
+            });
+        }
+
+        // Function to process the uploaded CSV file (kept separate for clarity)
+        function processCSVFile(file) {
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+                    // Get the file content
+                    const csvContent = event.target.result;
+
+                    // Process the CSV content using the helper function
+                    const processedData = preprocessCSV(csvContent);
+
+                    // Categorize the records using the helper function
+                    const { transferRecords, transactionRecords } = categorizeRecords(processedData);
+
+                    // Create ZIP file with the categorized CSV files and download it using the helper function
+                    createAndDownloadZip(transferRecords, transactionRecords, file.name);
+
+                } catch (error) {
+                    console.error('Error processing CSV file:', error);
+                    alert('处理文件时出错: ' + error.message);
+
+                    // Reset the file input on error
+                    fileInput.value = '';
+                }
+            };
+
+            reader.onerror = function() {
+                console.error('Error reading file');
+                alert('读取文件时出错');
+
+                // Reset the file input on read error
+                fileInput.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+    }); // End of DOMContentLoaded listener
+
+})(); // End of IIFE
