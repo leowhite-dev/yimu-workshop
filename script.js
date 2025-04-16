@@ -7,7 +7,7 @@
     // Helper functions moved outside DOMContentLoaded but within the IIFE
 
     // Function to show loading state
-    function showLoading(message = '处理中...') {
+    const showLoading = (message = '处理中...') => {
         // Check if loading overlay already exists
         if (document.getElementById('loading-overlay')) {
             // Update message if already showing
@@ -38,14 +38,12 @@
     }
 
     // Function to hide loading state
-    function hideLoading() {
+    const hideLoading = () => {
         const overlay = document.getElementById('loading-overlay');
         if (overlay) {
             overlay.classList.add('fade-out');
             setTimeout(() => {
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                overlay.parentNode?.removeChild(overlay);
                 isProcessing = false; // Reset processing state here
             }, 500); // Match this with CSS transition time
         } else {
@@ -60,7 +58,7 @@
     }
 
     // Function to update loading message
-    function updateLoadingMessage(message) {
+    const updateLoadingMessage = (message) => {
         const messageEl = document.getElementById('loading-message');
         if (messageEl) {
             messageEl.textContent = message;
@@ -68,7 +66,7 @@
     }
 
     // Function to show notification
-    function showNotification(message, type = 'success', duration = 5000) {
+    const showNotification = (message, type = 'success', duration = 5000) => {
         // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -100,9 +98,7 @@
         closeBtn.addEventListener('click', () => {
             notification.classList.add('fade-out');
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
+                notification.parentNode?.removeChild(notification);
             }, 300);
         });
 
@@ -122,14 +118,10 @@
         // Auto-remove after duration
         if (duration > 0) {
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.classList.add('fade-out');
-                    setTimeout(() => {
-                        if (notification.parentNode) {
-                            notification.parentNode.removeChild(notification);
-                        }
-                    }, 300);
-                }
+                notification.classList.add('fade-out');
+                setTimeout(() => {
+                    notification.parentNode?.removeChild(notification);
+                }, 300);
             }, duration);
         }
 
@@ -137,7 +129,7 @@
     }
 
     // Helper function to create notification container
-    function createNotificationContainer() {
+    const createNotificationContainer = () => {
         const container = document.createElement('div');
         container.className = 'notification-container';
         document.body.appendChild(container);
@@ -145,7 +137,7 @@
     }
 
     // Function to validate CSV file
-    function validateCSVFile(file) {
+    const validateCSVFile = (file) => {
         return new Promise((resolve, reject) => {
             // Check if file exists
             if (!file) {
@@ -169,7 +161,7 @@
 
             // Basic content validation by reading first few bytes
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
                     const sample = e.target.result.slice(0, 1000); // Read first 1000 chars
 
@@ -185,7 +177,7 @@
                 }
             };
 
-            reader.onerror = function() {
+            reader.onerror = () => {
                 reject(new Error('读取文件失败'));
             };
 
@@ -195,7 +187,7 @@
     }
 
     // Function to create and download a ZIP file
-    function createAndDownloadZip(transferRecords, transactionRecords, originalFileName) {
+    const createAndDownloadZip = (transferRecords, transactionRecords, originalFileName) => {
         return new Promise((resolve, reject) => {
             try {
                 updateLoadingMessage('正在创建ZIP文件...');
@@ -269,7 +261,7 @@
                     compressionOptions: {
                         level: 9
                     }
-                }).then(function(content) {
+                }).then((content) => {
                     // Create a download link
                     const downloadLink = document.createElement('a');
                     downloadLink.href = URL.createObjectURL(content);
@@ -288,7 +280,7 @@
                     };
 
                     resolve(summary);
-                }).catch(function(error) {
+                }).catch((error) => {
                     console.error('Error creating ZIP:', error);
                     reject(new Error(`创建ZIP文件失败: ${error.message}`));
                 });
@@ -300,8 +292,8 @@
     }
 
     // Main execution logic after DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.querySelector('.sidebar');
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get UI elements
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
         const uploadBtn = document.querySelector('.upload-btn');
@@ -333,7 +325,7 @@
 
         // Upload CSV file button functionality
         if (uploadBtn && fileInput) {
-            uploadBtn.addEventListener('click', function() {
+            uploadBtn.addEventListener('click', () => {
                 // Prevent multiple uploads while processing
                 if (isProcessing) {
                     showNotification('正在处理文件，请稍候...', 'info');
@@ -342,7 +334,7 @@
                 fileInput.click();
             });
 
-            fileInput.addEventListener('change', function(event) {
+            fileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (file) {
                     // Handle the CSV file upload
@@ -356,7 +348,7 @@
 
             // Make the upload area clickable
             if (dropZone && dropZone !== document.body) {
-                dropZone.addEventListener('click', function() {
+                dropZone.addEventListener('click', () => {
                     // Prevent multiple uploads while processing
                     if (isProcessing) {
                         showNotification('正在处理文件，请稍候...', 'info');
@@ -366,34 +358,21 @@
                 });
             }
 
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
+            // 定义拖放相关函数
+            const preventDefaults = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-            }
+            };
 
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight() {
+            const highlight = () => {
                 dropZone.classList.add('highlight');
-            }
+            };
 
-            function unhighlight() {
+            const unhighlight = () => {
                 dropZone.classList.remove('highlight');
-            }
+            };
 
-            dropZone.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
+            const handleDrop = (e) => {
                 if (isProcessing) {
                     showNotification('正在处理文件，请稍候...', 'info');
                     return;
@@ -407,11 +386,26 @@
                     fileInput.files = dt.files;
                     processCSVFile(file);
                 }
-            }
+            };
+
+            // 添加拖放事件监听器
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            dropZone.addEventListener('drop', handleDrop, false);
         }
 
         // Function to process the uploaded CSV file (kept separate for clarity)
-        function processCSVFile(file) {
+        const processCSVFile = (file) => {
             // Prevent processing if already in progress
             if (isProcessing) {
                 showNotification('正在处理文件，请稍候...', 'info');
@@ -437,14 +431,14 @@
                     updateLoadingMessage('正在读取文件...');
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
-                        reader.onload = function(event) {
+                        reader.onload = (event) => {
                             try {
                                 resolve(event.target.result);
                             } catch (error) {
                                 reject(new Error(`读取文件内容失败: ${error.message}`));
                             }
                         };
-                        reader.onerror = function() {
+                        reader.onerror = () => {
                             reject(new Error('读取文件失败'));
                         };
                         reader.readAsText(file);
@@ -817,8 +811,7 @@
 
 
                     // Handle messages from worker
-                    currentWorker.onmessage = function(e) {
-                        const { type, data } = e.data;
+                    currentWorker.onmessage = ({ data: { type, data } }) => {
                         console.log('Message from worker:', type, data);
 
                         if (type === 'progress') {
@@ -834,10 +827,11 @@
                             // Process results and create ZIP
                             updateLoadingMessage('处理完成，正在准备下载...');
                             createAndDownloadZip(data.transferRecords, data.transactionRecords, file.name)
-                                .then(summary => {
+                                .then((summary) => {
+                                    const { transferCount, transactionCount } = summary;
                                     hideLoading(); // Hide loading AFTER zip creation
                                     // Show success notification with summary
-                                    const message = `处理完成！共处理 ${summary.transferCount} 条转账记录和 ${summary.transactionCount} 条交易记录。`;
+                                    const message = `处理完成！共处理 ${transferCount} 条转账记录和 ${transactionCount} 条交易记录。`;
                                     showNotification(message, 'success');
                                 })
                                 .catch(zipError => {
@@ -870,7 +864,7 @@
                     };
 
                     // Handle general worker errors
-                    currentWorker.onerror = function(error) {
+                    currentWorker.onerror = (error) => {
                         console.error('Worker error event:', error);
                         hideLoading();
                         showNotification(`处理线程发生错误: ${error.message}`, 'error');

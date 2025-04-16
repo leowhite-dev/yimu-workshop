@@ -2,7 +2,7 @@
 // 该文件包含所有CSV处理相关的函数，在后台线程中执行
 
 // 预处理CSV内容
-function preprocessCSV(csvContent) {
+const preprocessCSV = (csvContent) => {
     // 分割内容为行
     let lines = csvContent.split('\n');
 
@@ -20,7 +20,7 @@ function preprocessCSV(csvContent) {
 }
 
 // 通用的CSV字段格式化函数 - 处理引号和逗号
-function formatCSVField(field) {
+const formatCSVField = (field) => {
     if (!field || field === "") return field;
 
     // 如果字段包含逗号或引号，需要用引号包裹并转义内部引号
@@ -31,7 +31,7 @@ function formatCSVField(field) {
 }
 
 // 改进的CSV行解析函数，更好地处理带有逗号和引号的备注
-function parseCSVLine(line) {
+const parseCSVLine = (line) => {
     const fields = [];
     let currentField = '';
     let inQuotes = false;
@@ -77,7 +77,7 @@ function parseCSVLine(line) {
 }
 
 // 处理备注文本的函数 - 简化版
-function processNoteText(text) {
+const processNoteText = (text) => {
     // 特殊情况处理
     if (!text || text === "/") return text;
 
@@ -97,7 +97,7 @@ function processNoteText(text) {
 }
 
 // 提取备注文本的辅助函数
-function extractNoteText(line, fields) {
+const extractNoteText = (line, fields) => {
     let noteText = "";
 
     // 先检查原始行中是否包含备注字段
@@ -140,9 +140,9 @@ function extractNoteText(line, fields) {
 }
 
 // 处理转入账户的函数
-function processTransferInAccount(account) {
+const processTransferInAccount = (account) => {
     if (!account) return "";
-    
+
     // 如果账户名称包含"转账"，提取实际账户名称
     if (account.includes("转账")) {
         const match = account.match(/转账到(.+)/);
@@ -150,12 +150,12 @@ function processTransferInAccount(account) {
             return match[1].trim();
         }
     }
-    
+
     return account;
 }
 
 // 将记录分类为转账记录和交易记录
-function categorizeRecords(lines) {
+const categorizeRecords = (lines) => {
     const transferRecords = [];
     const transactionRecords = [];
     let processedCount = 0;
@@ -277,7 +277,7 @@ self.addEventListener('message', function(e) {
 
             // 预处理CSV内容
             const processedLines = preprocessCSV(data.csvContent);
-            
+
             // 发送预处理完成的消息
             self.postMessage({
                 type: 'progress',
@@ -297,6 +297,15 @@ self.addEventListener('message', function(e) {
                 });
                 return;
             }
+
+            // 发送开始分类的消息
+            self.postMessage({
+                type: 'progress',
+                data: {
+                    stage: 'categorizing',
+                    progress: 0
+                }
+            });
 
             // 分类记录
             const { transferRecords, transactionRecords } = categorizeRecords(processedLines);
@@ -325,7 +334,7 @@ self.addEventListener('message', function(e) {
             self.postMessage({
                 type: 'error',
                 data: {
-                    message: `处理CSV文件时出错: ${error.message}`
+                    message: '处理CSV文件时出错: ' + error.message
                 }
             });
         }
