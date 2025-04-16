@@ -67,55 +67,20 @@
 
     // Function to show notification
     const showNotification = (message, type = 'success', duration = 5000) => {
-        // Create notification element
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+        notification.className = `notification notification-${type}`;
 
-        // Create message content
-        const content = document.createElement('div');
-        content.className = 'notification-content';
+        // Sanitize the message before setting textContent
+        // Simple sanitization: replace < and > to prevent HTML injection
+        const sanitizedMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        notification.textContent = sanitizedMessage; // Use textContent to prevent script execution
 
-        // Add appropriate icon based on type
-        const icon = document.createElement('i');
-        if (type === 'success') {
-            icon.className = 'fas fa-check-circle';
-        } else if (type === 'error') {
-            icon.className = 'fas fa-exclamation-circle';
-        } else if (type === 'warning') {
-            icon.className = 'fas fa-exclamation-triangle';
-        } else if (type === 'info') {
-            icon.className = 'fas fa-info-circle';
-        }
-
-        // Create text element
-        const text = document.createElement('span');
-        text.textContent = message;
-
-        // Create close button
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'notification-close';
-        closeBtn.innerHTML = '&times;';
-        closeBtn.addEventListener('click', () => {
-            notification.classList.add('fade-out');
-            setTimeout(() => {
-                notification.parentNode?.removeChild(notification);
-            }, 300);
-        });
-
-        // Assemble notification
-        content.appendChild(icon);
-        content.appendChild(text);
-        notification.appendChild(content);
-        notification.appendChild(closeBtn);
-
-        // Add to document
-        const container = document.querySelector('.notification-container') || createNotificationContainer();
         container.appendChild(notification);
 
-        // Show with animation
-        setTimeout(() => notification.classList.add('show'), 10);
-
-        // Auto-remove after duration
+        // Auto-remove notification
         if (duration > 0) {
             setTimeout(() => {
                 notification.classList.add('fade-out');
@@ -139,17 +104,18 @@
     // Function to validate CSV file
     const validateCSVFile = (file) => {
         return new Promise((resolve, reject) => {
-            // Check if file exists
-            if (!file) {
-                reject(new Error('未选择文件'));
-                return;
-            }
-
-            // Check file extension
+            // Check file type based on MIME type and extension
+            const allowedTypes = ['text/csv', 'application/vnd.ms-excel']; // Common CSV MIME types
             const fileExt = file.name.split('.').pop().toLowerCase();
-            if (fileExt !== 'csv') {
-                reject(new Error(`文件类型不支持: ${fileExt}。请上传CSV文件`));
-                return;
+
+            if (!allowedTypes.includes(file.type) && fileExt !== 'csv') {
+                 reject(new Error(`文件类型不支持: ${file.type || fileExt}。请上传CSV文件`));
+                 return;
+            }
+            // Allow if extension is csv even if MIME type is not recognized/matched
+            if (fileExt !== 'csv' && !allowedTypes.includes(file.type) ) {
+                 reject(new Error(`文件扩展名不支持: ${fileExt}。请上传CSV文件`));
+                 return;
             }
 
             // Check file size (max 10MB)
@@ -196,8 +162,11 @@
                 // Create a new ZIP file
                 const zip = new JSZip();
 
+                // Sanitize the original file name to remove potentially harmful characters
+                const sanitizedOriginalFileName = originalFileName.replace(/[<>:"/\|?*]/g, '_'); // Replace potentially problematic chars with underscore
+
                 // Get the file name without extension
-                const baseFileName = originalFileName.replace(/\.[^/.]+$/, "");
+                const baseFileName = sanitizedOriginalFileName.replace(/\.[^/.]+$/, "");
 
                 // Extract date range if it exists in the format (yyyymmdd-yyyymmdd)
                 let dateStr = "";
@@ -265,6 +234,7 @@
                     // Create a download link
                     const downloadLink = document.createElement('a');
                     downloadLink.href = URL.createObjectURL(content);
+                    // Use the sanitized baseFileName component for the download name
                     downloadLink.download = `${filePrefix}处理后的账单.zip`;
 
                     // Trigger the download
@@ -837,7 +807,8 @@
                                 .catch(zipError => {
                                     console.error('Error creating ZIP file:', zipError);
                                     hideLoading();
-                                    showNotification(`创建ZIP文件失败: ${zipError.message}`, 'error');
+                                    // Ensure error messages shown to user are safe
+                                    showNotification(`创建ZIP文件失败: ${zipError.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`, 'error');
                                 })
                                 .finally(() => {
                                     // Clean up worker and URL after processing result
@@ -852,7 +823,8 @@
                             // Handle errors reported by the worker
                             console.error('Error from worker:', data.message);
                             hideLoading();
-                            showNotification(`处理失败: ${data.message}`, 'error');
+                            // Ensure error messages shown to user are safe
+                            showNotification(`处理失败: ${data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`, 'error');
                             // Clean up worker and URL after error
                             if (currentWorker) {
                                 currentWorker.terminate();
@@ -887,7 +859,8 @@
                     // Error handling for validation or file reading
                     console.error('Error processing CSV file:', error);
                     hideLoading(); // Ensure loading is hidden on error
-                    showNotification(`处理失败: ${error.message}`, 'error');
+                     // Ensure error messages shown to user are safe
+                    showNotification(`处理失败: ${error.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`, 'error');
                     // No worker to terminate here yet, but ensure isProcessing is false
                     isProcessing = false;
                 });
