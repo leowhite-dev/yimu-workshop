@@ -227,6 +227,18 @@
         const uploadBtn = document.querySelector('.upload-btn');
         const fileInput = document.getElementById('csv-file-input');
 
+        // 初始化调试工具
+        const isDebugMode = DebugTools.initialize();
+
+        // 如果在调试模式下，记录一些初始化信息
+        if (isDebugMode) {
+            Logger.info('应用初始化开始', {
+                url: window.location.href,
+                timestamp: new Date().toISOString()
+            });
+            Logger.timeStart('应用初始化');
+        }
+
         createNotificationContainer();
 
         tabButtons.forEach(button => {
@@ -243,6 +255,12 @@
 
         if (tabButtons.length > 0 && !document.querySelector('.tab-button.active')) {
             tabButtons[0].click();
+        }
+
+        // 如果在调试模式下，记录初始化完成
+        if (isDebugMode) {
+            Logger.timeEnd('应用初始化');
+            Logger.info('应用初始化完成');
         }
 
         if (uploadBtn && fileInput) {
@@ -323,6 +341,14 @@
                 return;
             }
 
+            // 记录文件处理开始
+            Logger.info('开始处理文件', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            Logger.timeStart('文件处理');
+
             fileInput.value = '';
 
             showLoading(t('loadingValidatingFile'));
@@ -335,17 +361,23 @@
 
             validateCSVFile(file)
                 .then(() => {
+                    Logger.debug('文件验证通过');
                     updateLoadingMessage(t('loadingReadingFile'));
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.onload = (event) => {
                             try {
+                                Logger.debug('文件读取完成', {
+                                    size: event.target.result.length
+                                });
                                 resolve(event.target.result);
                             } catch (error) {
+                                Logger.error('文件读取失败', error);
                                 reject(new Error(t('errorFileReadFailed')));
                             }
                         };
                         reader.onerror = () => {
+                            Logger.error('文件读取错误');
                             reject(new Error(t('errorFileReadFailed')));
                         };
                         reader.readAsText(file);
@@ -636,71 +668,87 @@
                     let workerBlob, workerUrl;
 
                     try {
+                        Logger.debug('创建 Web Worker');
                         workerBlob = new Blob([workerCode], { type: 'application/javascript' });
                         workerUrl = URL.createObjectURL(workerBlob);
                         currentWorker = new Worker(workerUrl);
-                        console.log('Worker created:', workerUrl);
+                        Logger.info('Worker 创建成功');
                     } catch (error) {
-                        console.error('Error creating worker:', error);
+                        Logger.error('Worker 创建失败', error);
                         hideLoading();
                         showNotification(t('errorWorkerGeneral', error.message), 'error');
                         if (workerUrl) URL.revokeObjectURL(workerUrl);
+                        Logger.timeEnd('文件处理');
                         return;
                     }
 
                     currentWorker.onmessage = ({ data: { type, data } }) => {
-                        console.log('Message from worker:', type, data);
+                        Logger.debug('Worker 消息', { type, data });
 
                         if (type === 'progress') {
                             let message = t('processing');
                             if (data.stage === 'preprocessing') {
                                 message = `正在预处理数据... ${data.progress}%`;
+                                Logger.debug(`预处理进度: ${data.progress}%`);
                             } else if (data.stage === 'categorizing') {
                                 message = `正在分类记录... ${data.progress}%`;
+                                Logger.debug(`分类进度: ${data.progress}%`);
                             }
                             updateLoadingMessage(message);
                         } else if (type === 'result') {
+                            Logger.info('处理完成', {
+                                transferRecords: data.transferRecords.length,
+                                transactionRecords: data.transactionRecords.length
+                            });
                             updateLoadingMessage(t('processingComplete'));
                             createAndDownloadZip(data.transferRecords, data.transactionRecords, file.name)
                                 .then(() => {
                                     hideLoading();
+                                    Logger.timeEnd('文件处理');
+                                    Logger.info('文件处理完成');
                                 })
                                 .catch(zipError => {
-                                    console.error('Error creating ZIP file:', zipError);
+                                    Logger.error('ZIP 创建失败', zipError);
                                     hideLoading();
                                     showNotification(t('errorZipCreationFailed', zipError.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")), 'error');
+                                    Logger.timeEnd('文件处理');
                                 })
                                 .finally(() => {
                                     if (currentWorker) {
                                         currentWorker.terminate();
                                         currentWorker = null;
+                                        Logger.debug('Worker 已终止');
                                     }
                                     URL.revokeObjectURL(workerUrl);
-                                    console.log('Worker terminated and URL revoked after success.');
+                                    Logger.debug('Worker URL 已释放');
                                 });
                         } else if (type === 'error') {
-                            console.error('Error from worker:', data.message);
+                            Logger.error('Worker 错误', data.message);
                             hideLoading();
                             showNotification(t('errorProcessingFailed', data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")), 'error');
                             if (currentWorker) {
                                 currentWorker.terminate();
                                 currentWorker = null;
+                                Logger.debug('Worker 已终止');
                             }
                             URL.revokeObjectURL(workerUrl);
-                            console.log('Worker terminated and URL revoked after worker error.');
+                            Logger.debug('Worker URL 已释放');
+                            Logger.timeEnd('文件处理');
                         }
                     };
 
                     currentWorker.onerror = (error) => {
-                        console.error('Worker error event:', error);
+                        Logger.error('Worker 错误事件', error);
                         hideLoading();
                         showNotification(t('errorWorkerGeneral', error.message), 'error');
                         if (currentWorker) {
                             currentWorker.terminate();
                             currentWorker = null;
+                            Logger.debug('Worker 已终止');
                         }
                         URL.revokeObjectURL(workerUrl);
-                        console.log('Worker terminated and URL revoked after onerror.');
+                        Logger.debug('Worker URL 已释放');
+                        Logger.timeEnd('文件处理');
                         error.preventDefault();
                     };
 
@@ -709,10 +757,11 @@
 
                 })
                 .catch(error => {
-                    console.error('Error processing CSV file:', error);
+                    Logger.error('处理CSV文件错误', error);
                     hideLoading();
                     showNotification(t('errorValidationFailed', error.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")), 'error');
                     isProcessing = false;
+                    Logger.timeEnd('文件处理');
                 });
         }
     });
