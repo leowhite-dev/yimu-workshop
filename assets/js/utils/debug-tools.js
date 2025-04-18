@@ -12,24 +12,24 @@ const DebugTools = {
     // 检查URL参数中是否有debug=true
     const urlParams = new URLSearchParams(window.location.search);
     const debugParam = urlParams.get('debug');
-    
+
     // 检查localStorage中是否保存了调试设置
     const storedDebugSetting = localStorage.getItem('debugMode');
-    
+
     // 如果URL参数或localStorage中有设置为true，则启用调试模式
     const isDebugMode = debugParam === 'true' || storedDebugSetting === 'true';
-    
+
     // 设置Logger的调试模式
     Logger.setDebugMode(isDebugMode);
-    
+
     // 如果启用了调试模式，添加调试UI
     if (isDebugMode) {
       this.addDebugUI();
     }
-    
+
     return isDebugMode;
   },
-  
+
   /**
    * 添加调试UI面板
    */
@@ -51,7 +51,7 @@ const DebugTools = {
     debugPanel.style.transition = 'all 0.3s ease';
     debugPanel.style.maxHeight = '300px';
     debugPanel.style.overflowY = 'auto';
-    
+
     // 添加标题和控制按钮
     debugPanel.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -80,17 +80,17 @@ const DebugTools = {
         <div id="debug-status" style="margin-top: 10px; font-size: 11px; color: #aaa;"></div>
       </div>
     `;
-    
+
     // 添加到文档
     document.body.appendChild(debugPanel);
-    
+
     // 更新状态信息
     this.updateStatus();
-    
+
     // 添加事件监听器
     this.addEventListeners();
   },
-  
+
   /**
    * 为调试面板添加事件监听器
    */
@@ -101,7 +101,7 @@ const DebugTools = {
       Logger.setLevel(level);
       this.updateStatus();
     });
-    
+
     // 运行测试按钮
     document.getElementById('debug-run-tests').addEventListener('click', () => {
       if (typeof runTests === 'function') {
@@ -110,13 +110,13 @@ const DebugTools = {
         Logger.error('测试模块未加载，无法运行测试');
       }
     });
-    
+
     // 清除控制台按钮
     document.getElementById('debug-clear-logs').addEventListener('click', () => {
       console.clear();
       Logger.info('控制台已清除');
     });
-    
+
     // 禁用调试按钮
     document.getElementById('debug-disable').addEventListener('click', () => {
       localStorage.setItem('debugMode', 'false');
@@ -125,7 +125,7 @@ const DebugTools = {
         window.location.reload();
       }, 3000);
     });
-    
+
     // 最小化按钮
     document.getElementById('debug-minimize').addEventListener('click', () => {
       const content = document.getElementById('debug-content');
@@ -137,7 +137,7 @@ const DebugTools = {
         document.getElementById('debug-minimize').textContent = '□';
       }
     });
-    
+
     // 关闭按钮
     document.getElementById('debug-close').addEventListener('click', () => {
       const panel = document.getElementById('debug-panel');
@@ -147,7 +147,7 @@ const DebugTools = {
       }, 300);
     });
   },
-  
+
   /**
    * 更新调试面板状态信息
    */

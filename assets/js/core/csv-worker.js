@@ -89,51 +89,34 @@ const processNoteText = (text) => {
     // 使用正则表达式简化处理
     // 1. 处理连续引号 "" -> "
     // 2. 保留反斜杠转义
-    // 3. 保留逗号
+    // 3. 将英文逗号替换为中文逗号，避免被CSV解析器误认为列分隔符
     return text
         .replace(/""/g, '"')  // 处理连续引号
         .replace(/\\(.)/g, '\\$1')  // 保留转义字符
-        .replace(/"$/g, '');  // 移除末尾引号
+        .replace(/,/g, '，');  // 将英文逗号替换为中文逗号
 }
 
+
+
 // 提取备注文本的辅助函数
-const extractNoteText = (line, fields) => {
+const extractNoteText = (_, fields) => {
     let noteText = "";
 
-    // 先检查原始行中是否包含备注字段
-    const originalLine = line.trim();
-    const commentStart = originalLine.indexOf('"转账备注:');
+    // 先检查是否是转账类型的记录
+    if (fields.length > 1 && fields[1] === "转账" && fields.length > 3) {
+        // 如果是转账类型，则合并第三列和第四列作为备注
+        const recipient = fields.length > 2 ? processNoteText(fields[2]) : ""; // 第三列（转账对象）
+        const comment = fields.length > 3 ? processNoteText(fields[3]) : "";   // 第四列（原备注）
 
-    if (commentStart !== -1) {
-        // 如果原始行中包含备注字段，直接提取备注字段
-        // 找到备注字段的结束位置
-        const possibleEndMarkers = ['","收入"', '",'];
-        let commentEnd = -1;
-
-        // 尝试所有可能的结束标记
-        for (const marker of possibleEndMarkers) {
-            const endPos = originalLine.indexOf(marker, commentStart);
-            if (endPos !== -1) {
-                commentEnd = endPos;
-                break;
-            }
+        // 生成新的完整备注信息
+        if (recipient) {
+            noteText = '转给' + recipient + '，' + comment;
+        } else {
+            noteText = comment;
         }
-
-        if (commentEnd !== -1) {
-            // 提取备注字段
-            const commentField = originalLine.substring(commentStart, commentEnd + 1);
-            noteText = processNoteText(commentField);
-        }
-    } else {
-        // 如果原始行中不包含备注字段，使用字段数组中的字段
-        // 根据规则判断备注所在位置
-        if (fields.length > 1 && fields[1] === "转账" && fields.length > 3) {
-            // 如果原本第二列是"转账"，则备注在原本的第四列
-            noteText = fields.length > 3 ? processNoteText(fields[3]) : "";
-        } else if (fields.length > 10) {
-            // 否则备注在原本的第11列
-            noteText = processNoteText(fields[10]);
-        }
+    } else if (fields.length > 10) {
+        // 如果不是转账类型，则备注在原本的第11列
+        noteText = processNoteText(fields[10]);
     }
 
     return noteText;
@@ -222,11 +205,25 @@ const categorizeRecords = (lines) => {
             // 提取备注文本
             const noteText = extractNoteText(line, fields);
 
+            // 直接从字段中提取收支类型和金额
+            let incomeType = "";
+            let amount = "";
+
+            // 如果是转账类型，则收支类型在第五列
+            if (fields.length > 1 && fields[1] === "转账" && fields.length > 4) {
+                incomeType = fields[4]; // 第五列是收支类型（收入/支出）
+                amount = fields.length > 5 ? fields[5].replace(/¥/g, "") : ""; // 第六列是金额，去掉¥符号
+            } else {
+                // 其他类型的记录
+                incomeType = fields.length > 4 ? fields[4] : "";
+                amount = fields.length > 5 ? fields[5].replace(/¥/g, "") : "";
+            }
+
             // 根据指定要求创建具有9列的新数组
             const reformattedFields = [
                 fields[0],                // 第1列 ← 原始第1列
-                fields.length > 4 ? fields[4] : "", // 第2列 ← 原始第5列
-                fields.length > 5 ? fields[5] : "", // 第3列 ← 原始第6列
+                incomeType,               // 第2列 ← 收支类型
+                amount,                   // 第3列 ← 金额
                 "",                       // 第4列 - 空
                 "",                       // 第5列 - 空
                 "账本",                   // 第6列 - 固定值"账本"
