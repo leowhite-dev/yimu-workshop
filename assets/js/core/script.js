@@ -571,7 +571,18 @@
                                         ""
                                     ];
 
+                                    // 移除尾部的空字段
+                                    let lastNonEmptyIndex = reformattedFields.length - 1;
+                                    while (lastNonEmptyIndex >= 0 && reformattedFields[lastNonEmptyIndex] === "") {
+                                        lastNonEmptyIndex--;
+                                    }
+
+                                    // 确保至少保留必要的字段
+                                    const lastFieldToKeep = Math.max(7, lastNonEmptyIndex);
+
+                                    // 用逗号连接字段，并在需要时保留引号
                                     const reformattedLine = reformattedFields
+                                        .slice(0, lastFieldToKeep + 1)
                                         .map(formatCSVField)
                                         .join(',');
 
