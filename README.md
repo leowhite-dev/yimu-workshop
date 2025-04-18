@@ -3,7 +3,7 @@
 ## 介绍
 **一木记账工坊**是一个由第三方开发者开发的**开源工具集合**，旨在为[一木记账](https://www.yimuapp.com)用户提供额外的功能支持。
 
-> ⚠ **重要声明**：  
+> ⚠ **重要声明**：
 > 本项目与杭州一木宇宙科技有限责任公司**无关**，所有工具均由个人开发，未经官方审查。请**不要**向官方团队反馈本项目的 bug 或问题。如有任何反馈，请联系 [leowhite.devspace@gmail.com](mailto:leowhite.devspace@gmail.com) 或在 GitHub 提交 issue 和 PR。您的意见和反馈十分重要。
 
 ## 项目背景
@@ -23,7 +23,7 @@
 - **软件导出账单的数据可视化**：提供账单数据的可视化分析功能。
 - **多平台账单识别模型**：开发模型以识别和处理多平台的账单数据。
 
-> **注意**：  
+> **注意**：
 > 以上功能仅为初步计划，不具备强执行约束。
 
 ## 贡献与反馈
@@ -40,10 +40,36 @@
 
 ## 项目结构
 项目目录结构说明：
-- `script.js`：主要功能实现的JavaScript脚本
-- `index.html`：网页版工具入口
-- `style.css`：样式文件
-- 其他未加入版本控制的临时文件不作说明
 
-> **注意**：  
+```
+yimu-workshop/
+├── assets/
+│   ├── css/
+│   │   └── style.css          # 样式文件
+│   ├── js/
+│   │   ├── core/
+│   │   │   ├── script.js      # 主要功能实现的JavaScript脚本
+│   │   │   └── csv-worker.js  # CSV处理的Web Worker
+│   │   ├── utils/
+│   │   │   ├── locales.js     # 国际化文本
+│   │   │   ├── logger.js      # 日志工具
+│   │   │   ├── debug-tools.js # 调试工具
+│   │   │   └── optimized-functions.js # 优化的功能函数
+│   │   └── tests/
+│   │       └── tests.js       # 测试脚本
+├── test/                      # 测试数据
+├── index.html                 # 网页版工具入口
+├── README.md                  # 项目说明文档
+└── LICENSE                    # 许可证文件
+```
+
+> **注意**：
 > `.gitignore`配置了部分不加入版本控制的内容，请自行查看。
+
+### 文件夹说明
+
+- **assets/css/**: 存放所有样式文件
+- **assets/js/core/**: 存放核心功能实现的JavaScript文件
+- **assets/js/utils/**: 存放工具类JavaScript文件，如国际化、日志、调试工具等
+- **assets/js/tests/**: 存放测试相关的JavaScript文件
+- **test/**: 存放测试数据文件
