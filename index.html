@@ -185,32 +185,17 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="assets/js/utils/locales.js"></script> <!-- Load locales first -->
-    <script src="assets/js/utils/logger.js"></script> <!-- Load logger before other scripts -->
-    <script src="assets/js/utils/debug-tools.js"></script>
-    <script src="assets/js/tests/tests.js"></script>
-    <script src="assets/js/core/script.js"></script>
-    <script>
-        // Function to apply translations
-        function applyTranslations() {
-            document.querySelectorAll('[data-translate]').forEach(element => {
-                const key = element.getAttribute('data-translate');
-                const translation = t(key);
-                if (element.hasAttribute('data-translate-html')) {
-                    // Use innerHTML for elements containing HTML tags
-                    element.innerHTML = translation;
-                } else if (element.tagName === 'TITLE') {
-                    // Handle title tag separately
-                    document.title = translation;
-                } else {
-                    // Use textContent for plain text elements
-                    element.textContent = translation;
-                }
-            });
-        }
+    <!-- 工具模块 -->
+    <script src="assets/js/utils/logger.js"></script> <!-- 日志工具 -->
+    <script src="assets/js/utils/debug-tools.js"></script> <!-- 调试工具 -->
+    <script src="assets/js/utils/i18n.js"></script> <!-- 国际化模块 -->
+    <script src="assets/js/utils/ui.js"></script> <!-- UI组件模块 -->
+    <script src="assets/js/utils/csv-processor.js"></script> <!-- CSV处理模块 -->
 
-        // Apply translations once the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', applyTranslations);
-    </script>
+    <!-- 测试模块 -->
+    <script src="assets/js/tests/tests.js"></script>
+
+    <!-- 应用初始化 -->
+    <script src="assets/js/core/app.js"></script>
 </body>
 </html>
