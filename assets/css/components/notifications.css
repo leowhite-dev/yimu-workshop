@@ -1,0 +1,78 @@
+/**
+ * notifications.css - 通知系统组件
+ * 定义通知系统的样式
+ */
+
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.notification {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.fade-out {
+    transform: translateX(120%);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.notification i {
+    font-size: 20px;
+}
+
+/* 通知类型样式 */
+.notification.success i {
+    color: var(--secondary-color);
+}
+
+.notification.error i {
+    color: var(--danger-color);
+}
+
+.notification.warning i {
+    color: var(--orange-color);
+}
+
+.notification.info i {
+    color: var(--primary-color);
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--grey-color);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.notification-close:hover {
+    color: var(--dark-color);
+}

@@ -1,0 +1,43 @@
+/**
+ * variables.css - 全局变量定义
+ * 定义全局使用的颜色、尺寸和其他变量
+ */
+
+:root {
+    /* 颜色 */
+    --primary-color: #4F46E5;
+    --primary-light: #818CF8;
+    --secondary-color: #10B981;
+    --dark-color: #1F2937;
+    --light-color: #F9FAFB;
+    --grey-color: #6B7280;
+    --danger-color: #EF4444;
+    --orange-color: #F97316;
+    --pink-color: #EC4899;
+    
+    /* 阴影 */
+    --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* 圆角 */
+    --border-radius: 8px;
+    
+    /* 布局 */
+    --sidebar-width: 240px;
+    --tab-width: 8px;
+    --tab-expanded-width: 120px;
+    
+    /* 间距 */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* 字体大小 */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 2rem;
+}

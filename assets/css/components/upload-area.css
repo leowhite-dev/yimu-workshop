@@ -1,0 +1,48 @@
+/**
+ * upload-area.css - 文件上传区域组件
+ * 定义文件上传区域的样式
+ */
+
+.upload-area {
+    border: 2px dashed var(--grey-color);
+    border-radius: var(--border-radius);
+    padding: 40px 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: rgba(79, 70, 229, 0.05);
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    cursor: pointer;
+}
+
+.upload-area i {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.upload-area h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--dark-color);
+}
+
+.upload-area p {
+    margin: 0;
+    color: var(--grey-color);
+}
+
+.upload-area .upload-hint {
+    font-size: 0.9rem;
+    margin-top: 10px;
+    color: var(--primary-color);
+}
+
+.upload-area.highlight {
+    border-color: var(--primary-color);
+    background-color: rgba(79, 70, 229, 0.1);
+    transform: scale(1.01);
+}

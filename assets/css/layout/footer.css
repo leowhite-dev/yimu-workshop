@@ -1,0 +1,27 @@
+/**
+ * footer.css - 页脚布局
+ * 定义页脚的样式
+ */
+
+footer {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+    margin-left: var(--tab-width);
+}
+
+footer a {
+    color: var(--primary-light);
+}
+
+footer a:hover {
+    color: white;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    footer {
+        margin-left: 0;
+    }
+}

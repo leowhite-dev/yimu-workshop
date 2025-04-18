@@ -1,0 +1,29 @@
+/**
+ * cards.css - 卡片和容器组件
+ * 定义卡片、面板和其他容器的样式
+ */
+
+/* 基础卡片样式 */
+.card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+/* 特殊卡片和容器 */
+.features, .platforms, .feature-details {
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .features, .platforms, .feature-details {
+        padding: 1.5rem;
+    }
+}

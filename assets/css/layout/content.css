@@ -1,0 +1,32 @@
+/**
+ * content.css - 内容区域布局
+ * 定义主要内容区域和章节的样式
+ */
+
+/* 内容区域 */
+.content-area {
+    flex: 1;
+    margin-left: var(--tab-width);
+    padding-top: 120px;
+    padding-bottom: 3rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .content-area {
+        margin-left: 0;
+        padding-top: 120px;
+    }
+
+    section {
+        margin-bottom: 50px;
+    }
+
+    section h2 {
+        font-size: 1.75rem;
+    }
+
+    section h3 {
+        font-size: 1.25rem;
+    }
+}

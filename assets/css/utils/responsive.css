@@ -1,0 +1,115 @@
+/**
+ * responsive.css - 响应式设计工具
+ * 定义响应式布局和媒体查询
+ */
+
+/* 响应式网格 */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+}
+
+/* 响应式显示/隐藏 */
+.hidden { display: none !important; }
+.block { display: block !important; }
+.inline { display: inline !important; }
+.inline-block { display: inline-block !important; }
+.flex { display: flex !important; }
+.grid { display: grid !important; }
+
+/* 小屏幕 (手机) */
+@media (max-width: 640px) {
+    .sm-hidden { display: none !important; }
+    .sm-block { display: block !important; }
+    .sm-inline { display: inline !important; }
+    .sm-inline-block { display: inline-block !important; }
+    .sm-flex { display: flex !important; }
+    .sm-grid { display: grid !important; }
+
+    .grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 中等屏幕 (平板) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .md-hidden { display: none !important; }
+    .md-block { display: block !important; }
+    .md-inline { display: inline !important; }
+    .md-inline-block { display: inline-block !important; }
+    .md-flex { display: flex !important; }
+    .md-grid { display: grid !important; }
+
+    .grid { grid-template-columns: repeat(8, 1fr); }
+}
+
+/* 大屏幕 (桌面) */
+@media (min-width: 1025px) {
+    .lg-hidden { display: none !important; }
+    .lg-block { display: block !important; }
+    .lg-inline { display: inline !important; }
+    .lg-inline-block { display: inline-block !important; }
+    .lg-flex { display: flex !important; }
+    .lg-grid { display: grid !important; }
+}
+
+/* 响应式间距 */
+.m-0 { margin: 0 !important; }
+.m-1 { margin: 0.25rem !important; }
+.m-2 { margin: 0.5rem !important; }
+.m-3 { margin: 1rem !important; }
+.m-4 { margin: 1.5rem !important; }
+.m-5 { margin: 2rem !important; }
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: 0.25rem !important; }
+.p-2 { padding: 0.5rem !important; }
+.p-3 { padding: 1rem !important; }
+.p-4 { padding: 1.5rem !important; }
+.p-5 { padding: 2rem !important; }
+
+/* 响应式文本对齐 */
+@media (max-width: 640px) {
+    .sm-text-center { text-align: center !important; }
+    .sm-text-left { text-align: left !important; }
+    .sm-text-right { text-align: right !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .md-text-center { text-align: center !important; }
+    .md-text-left { text-align: left !important; }
+    .md-text-right { text-align: right !important; }
+}
+
+@media (min-width: 1025px) {
+    .lg-text-center { text-align: center !important; }
+    .lg-text-left { text-align: left !important; }
+    .lg-text-right { text-align: right !important; }
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+    :root {
+        --tab-expanded-width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --tab-width: 6px;
+    }
+
+    .page-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .action-button {
+        width: 100%;
+    }
+}

@@ -1,0 +1,178 @@
+/**
+ * base.css - 基础样式
+ * 定义全局基础样式，如重置样式、基本排版等
+ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    line-height: 1.6;
+    color: var(--dark-color);
+    background-color: var(--light-color);
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+/* 容器 */
+.container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 布局 */
+.page-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 段落和标题 */
+p {
+    margin-bottom: 1rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+/* 列表 */
+ul, ol {
+    list-style-position: inside;
+    margin-bottom: 1.5rem;
+}
+
+ul li, ol li {
+    margin-bottom: 0.75rem;
+    position: relative;
+    padding-left: 1.5rem;
+    list-style-type: none;
+}
+
+ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+ol {
+    counter-reset: item;
+}
+
+ol li::before {
+    counter-increment: item;
+    content: counter(item) ".";
+    position: absolute;
+    left: 0;
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+/* 特定功能标签的列表样式 */
+#feature2 ul li::before, #feature2 ol li::before {
+    color: var(--orange-color);
+}
+
+#feature3 ul li::before, #feature3 ol li::before {
+    color: var(--pink-color);
+}
+
+/* 特殊文本样式 */
+.note {
+    font-style: italic;
+    color: var(--grey-color);
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+/* 章节 */
+section {
+    margin-bottom: 80px;
+}
+
+section h2 {
+    position: relative;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--secondary-color);
+    border-radius: 2px;
+}
+
+section h3 {
+    font-size: 1.5rem;
+    margin: 1.5rem 0 1rem;
+    color: var(--dark-color);
+}
+
+/* 特定功能标签的样式 */
+#feature1 h2 {
+    color: var(--secondary-color);
+}
+
+#feature1 h2::after {
+    background-color: var(--secondary-color);
+}
+
+#feature2 h2 {
+    color: var(--orange-color);
+}
+
+#feature2 h2::after {
+    background-color: var(--orange-color);
+}
+
+#feature3 h2 {
+    color: var(--pink-color);
+}
+
+#feature3 h2::after {
+    background-color: var(--pink-color);
+}
+
+/* 警告和提示框 */
+.disclaimer {
+    background-color: #FEF2F2;
+    border-left: 4px solid var(--danger-color);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border-radius: var(--border-radius);
+}
+
+.disclaimer h3 {
+    color: var(--danger-color);
+    margin-top: 0;
+}
+
+/* 内容部分 */
+.background, .security, .roadmap, .contribution {
+    margin-top: 3rem;
+}
