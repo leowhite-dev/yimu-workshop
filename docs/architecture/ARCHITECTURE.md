@@ -52,8 +52,7 @@ yimu-workshop/
 │   │   └── style.css          # 样式文件
 │   ├── js/
 │   │   ├── core/
-│   │   │   ├── script.js      # 主要功能实现的JavaScript脚本
-│   │   │   └── csv-worker.js  # CSV处理的Web Worker
+│   │   │   └── script.js      # 主要功能实现的JavaScript脚本（包含内联Web Worker代码）
 │   │   ├── utils/
 │   │   │   ├── locales.js     # 国际化文本
 │   │   │   ├── logger.js      # 日志工具
@@ -90,9 +89,9 @@ yimu-workshop/
 - **结果处理**：处理处理结果并生成下载文件
 - **错误处理**：捕获和显示处理过程中的错误
 
-### 3.3 CSV处理 (csv-worker.js)
+### 3.3 CSV处理 (内联Web Worker)
 
-CSV处理模块在Web Worker中运行，负责以下功能：
+CSV处理模块作为内联代码在Web Worker中运行，负责以下功能：
 
 - **CSV预处理**：移除无关内容，准备数据处理
 - **数据解析**：解析CSV行，处理引号、逗号等特殊字符

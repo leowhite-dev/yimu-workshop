@@ -29,7 +29,7 @@
    ```
 
 2. 启动本地服务器（可选）：
-   
+
    由于项目是纯前端项目，可以直接在浏览器中打开`index.html`文件。但为了更好的开发体验，建议使用本地服务器：
 
    使用Python内置服务器：
@@ -45,7 +45,7 @@
    ```
 
 3. 访问开发环境：
-   
+
    打开浏览器，访问 `http://localhost:8000`
 
 ### 1.3 开发模式
@@ -58,8 +58,7 @@
 
 - **index.html**: 主页面，包含UI结构和基本布局
 - **assets/css/style.css**: 样式定义，包含所有UI组件的样式
-- **assets/js/core/script.js**: 主要JavaScript逻辑，处理用户交互和功能实现
-- **assets/js/core/csv-worker.js**: Web Worker脚本，用于后台处理CSV数据
+- **assets/js/core/script.js**: 主要JavaScript逻辑，处理用户交互和功能实现，包含内联的Web Worker代码
 - **assets/js/utils/locales.js**: 国际化文本定义，支持多语言
 - **assets/js/utils/logger.js**: 日志工具，提供不同级别的日志记录
 - **assets/js/utils/debug-tools.js**: 调试工具，提供调试功能和测试运行
@@ -76,15 +75,15 @@ index.html
   ├── 加载 debug-tools.js
   ├── 加载 tests.js
   └── 加载 script.js
-      └── 创建 Web Worker (csv-worker.js)
+      └── 创建 Web Worker (使用内联代码)
 ```
 
 ### 2.3 数据流向
 
 1. 用户上传CSV文件
 2. script.js验证文件并读取内容
-3. 创建Web Worker并发送数据
-4. csv-worker.js处理数据并返回结果
+3. 创建内联Web Worker并发送数据
+4. Web Worker处理数据并返回结果
 5. script.js接收结果并创建ZIP文件
 6. 用户下载处理后的文件
 
@@ -108,7 +107,7 @@ index.html
 
 ### 3.2 CSV处理逻辑开发
 
-CSV处理逻辑位于csv-worker.js中，遵循以下原则：
+CSV处理逻辑位于script.js文件中的内联Web Worker代码中，遵循以下原则：
 
 - 使用模块化设计，每个函数负责单一功能
 - 使用注释说明复杂逻辑
@@ -118,7 +117,7 @@ CSV处理逻辑位于csv-worker.js中，遵循以下原则：
 修改或扩展CSV处理逻辑的步骤：
 
 1. 了解现有处理流程和数据结构
-2. 修改或添加处理函数
+2. 在script.js中找到并修改workerCode字符串中的相关函数
 3. 更新消息处理逻辑
 4. 添加测试用例验证功能
 
@@ -234,7 +233,7 @@ runTests();
 ```javascript
 function testNewFeature() {
   Logger.group('新功能测试');
-  
+
   try {
     // 测试代码
     if (expectedResult === actualResult) {
@@ -245,7 +244,7 @@ function testNewFeature() {
   } catch (error) {
     Logger.error('❌ 测试出错', error);
   }
-  
+
   Logger.groupEnd();
 }
 ```

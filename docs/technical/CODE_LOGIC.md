@@ -34,7 +34,7 @@ HTML文件定义了应用的基本结构，包括：
 - UI交互处理
 - ZIP文件生成和下载
 
-### 1.3 CSV处理Worker (src/core/csv-worker.js)
+### 1.3 内联Web Worker (src/core/script.js中的workerCode)
 
 后台处理线程，负责：
 - CSV文件解析
